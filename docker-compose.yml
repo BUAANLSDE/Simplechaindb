@@ -1,0 +1,34 @@
+version: '2'
+
+services:
+  rdb:
+    image: rethinkdb
+    ports:
+      - "58080:8080"
+      - "28015"
+    volumes_from:
+      - rdb-data
+
+  rdb-data:
+    image: rethinkdb
+    volumes:
+      - /data
+    command: "true"
+
+  bdb:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: docker-bigchaindb
+    volumes:
+      - ./bigchaindb:/usr/src/app/bigchaindb
+      - ./tests:/usr/src/app/tests
+      - ./docs:/usr/src/app/docs
+      - ./setup.py:/usr/src/app/setup.py
+      - ./setup.cfg:/usr/src/app/setup.cfg
+      - ./pytest.ini:/usr/src/app/pytest.ini
+      - ~/.bigchaindb_docker:/root/.bigchaindb_docker
+    environment:
+      BIGCHAINDB_DATABASE_HOST: rdb
+      BIGCHAINDB_CONFIG_PATH: /root/.bigchaindb_docker/config
+    command: bigchaindb start
