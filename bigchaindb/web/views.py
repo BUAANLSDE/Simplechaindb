@@ -134,9 +134,9 @@ def get_transaction_by_public_key(public_key):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        tx = bigchain.get_owned_ids(public_key);
+        tx_ids = bigchain.get_owned_ids(public_key);
 
-    if not tx:
+    if not tx_ids:
         abort(404)
 
-    return flask.jsonify(**tx)
+    return flask.jsonify(**tx_ids)
