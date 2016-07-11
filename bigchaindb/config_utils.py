@@ -27,12 +27,13 @@ from bigchaindb.consensus import AbstractConsensusRules
 logging.getLogger('requests').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
+# TODO: set the default config file name
 CONFIG_DEFAULT_PATH = os.environ.setdefault(
     'BIGCHAINDB_CONFIG_PATH',
-    os.path.join(os.path.expanduser('~'), '.bigchaindb'),
+    os.path.join(os.path.expanduser('~'), '.simplechaindb'),
 )
 
-CONFIG_PREFIX = 'BIGCHAINDB'
+CONFIG_PREFIX = 'SIMPLECHAINDB'
 CONFIG_SEP = '_'
 
 

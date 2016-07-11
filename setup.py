@@ -56,7 +56,7 @@ benchmarks_require = [
 ]
 
 setup(
-    name='BigchainDB',
+    name='SimplechainDB',
     version=version['__version__'],
     description='BigchainDB: A Scalable Blockchain Database',
     long_description=__doc__,
@@ -85,7 +85,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'bigchaindb=bigchaindb.commands.bigchain:main'
+            'simplechaindb=bigchaindb.commands.bigchain:main'
         ],
         'bigchaindb.consensus': [
             'default=bigchaindb.consensus:BaseConsensusRules'
