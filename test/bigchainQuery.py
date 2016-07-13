@@ -78,6 +78,7 @@ class ChainQuery(object):
         else:
             logger.info('this transaction is invalid.')
 
+    #
 
 if __name__ == '__main__':
     query=ChainQuery(host='10.2.4.68',port=28015,dbname='bigchain')

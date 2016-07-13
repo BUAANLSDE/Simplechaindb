@@ -17,7 +17,8 @@ config = {
     'database': {
         'host': os.environ.get('BIGCHAINDB_DATABASE_HOST', 'localhost'),
         'port': 28015,
-        'name': 'simplechain',
+        # TODO: Named modification
+        'name': 'bigchain',
     },
     'keypair': {
         'public': None,

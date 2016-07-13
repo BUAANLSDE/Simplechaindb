@@ -15,7 +15,7 @@ payload_schema={
         "amount":{"type":"number"},
         # hash of goods
         "asset":{"type":"string"},
-        # total asset of the transaction sponsor
+        # total asset of the transaction owner
         "account":{"type":"number"}
     }
 }
