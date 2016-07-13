@@ -11,6 +11,8 @@ from bigchaindb import config_utils
 from bigchaindb import exceptions
 from bigchaindb import crypto
 
+# added import
+from bigchaindb import payload
 
 class GenesisBlockAlreadyExistsError(Exception):
     pass
@@ -630,3 +632,108 @@ class Bigchain(object):
             return Bigchain.BLOCK_VALID
         else:
             return Bigchain.BLOCK_UNDECIDED
+
+
+
+    # Added API interfaces for SimpleChaindb
+    #    1.currency interfaces , parameter payload is filled by application layer, of course it's incomplete.
+    #        charge currency
+    #        transfer currency
+    #        get current balance
+    #    2.asset interfaces
+    #        create asset
+    #        get tx_id by a unique hash of asset
+    #        transfer asset
+    #        get all assets of one user
+    #        destroy asset
+
+    def charge_currency(self,pub_key,payload):
+        """charge currency for one user
+
+        Args:
+            pub_key (str): public key of  owner.
+            payload (dict): the payload of this transaction,currency type.
+        """
+        pass
+
+    def transfer_currency(self,old_owner_pub,old_owner_priv,new_owner_pub,payload):
+        """transfer currency from one to another
+
+        Args:
+            old_owner_pub (str): public key of old owner.
+            old_owner_priv (str): private key of old owner.
+            new_owner_pub (str): public key of new owner.
+            payload (dict): the payload of this transaction,currency type.
+        """
+        pass
+
+    def get_current_balance(self,pub_key):
+        """get current balance of the user
+
+        Args:
+            pub_key (str): public key of the user.
+        """
+        pass
+
+    def create_asset(self,pub_key,payload):
+        """create asset for the user
+
+        Args:
+            pub_key (str): public key of the user.
+            payload (dict): the payload of this transaction,asset type.
+        """
+        pass
+
+
+    def get_tx_by_asset(self,asset):
+        """get transcation by given asset hash
+
+        Args:
+            asset (str): unique hash of this asset
+
+        Returns:
+            transcation
+        """
+        pass
+
+    def get_owner(self,asset):
+        """get current owner of given asset
+
+        Args:
+            asset (str): unique hash of this asset
+
+        Returns:
+            owner's public key
+        """
+        tx=self.get_tx_by_asset(asset)
+        return tx['transaction']['conditions']['new_owners']
+
+
+
+    def transfer_asset(self,old_owner_pub,old_owner_priv,new_owner_pub,tx_id):
+        """transfer asset from one to another
+
+        Args:
+            old_owner_pub (str): public key of old owner.
+            old_owner_priv (str): private key of old owner.
+            new_owner_pub (str): public key of new owner.
+            tx_id (str): transcation id owned by the old owner of this asset.
+        """
+        pass
+
+    def get_owned_asset(self,pub_key):
+        """get all owned asset
+
+        Args:
+            pub_key (str): public key of the user.
+        """
+        pass
+
+    def destory_asset(self,pub_key,asset):
+        """destory one's asset
+
+        Args:
+            pub_key (str): public key of the user.
+            asset (str): unique hash of this asset
+        """
+        pass
