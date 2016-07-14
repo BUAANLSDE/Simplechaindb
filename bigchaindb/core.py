@@ -718,22 +718,45 @@ class Bigchain(object):
             old_owner_priv (str): private key of old owner.
             new_owner_pub (str): public key of new owner.
             tx_id (str): transcation id owned by the old owner of this asset.
+
+        Returns:
+            dict: database response.
         """
-        pass
+        tx = self.get_transaction(tx_id)
+
+        transcation = self.create_transaction(old_owner_pub,new_owner_pub,tx_id,"TRANSFER",payload=tx['transaction']['data']['payload'])
+        transcation_sighed = self.sign_transaction(transcation,old_owner_priv)
+        response = self.write_transaction(transcation_sighed)
+        return response
 
     def get_owned_asset(self,pub_key):
         """get all owned asset
 
         Args:
             pub_key (str): public key of the user.
-        """
-        pass
 
-    def destory_asset(self,pub_key,asset):
+        Returns:
+            list: list of `asset-txids` currently owned by `pub_key`.
+        """
+        response = []
+        list = self.get_owned_ids(pub_key)
+        for txid in list:
+            tx = self.get_transaction(txid)
+            if tx['transaction']['data']['payload']['category'] == 'asset':
+                response.append(txid)
+        return response
+
+    def destory_asset(self,pub_key,private_key,asset):
         """destory one's asset
 
         Args:
             pub_key (str): public key of the user.
-            asset (str): unique hash of this asset
+            private_key (str): private key of the user.
+            asset (str): unique hash of this asset.
+
+        Returns:
+            dict: database response
         """
-        pass
+        tx = self.get_tx_by_asset(asset)
+        response = self.transfer_asset(pub_key,private_key,self.me,tx['id'])
+        return response
