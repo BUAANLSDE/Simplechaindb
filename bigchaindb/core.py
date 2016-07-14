@@ -802,10 +802,6 @@ class Bigchain(object):
         Returns:
             dict: database response
         """
-<<<<<<< HEAD
         tx = self.get_tx_by_asset(asset)
         response = self.transfer_asset(pub_key,private_key,self.me,tx['id'])
         return response
-=======
-        pass
->>>>>>> ccb33b74c5fc6998986ff8a0d1a03a8e0a2f8d11
