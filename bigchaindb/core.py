@@ -698,9 +698,23 @@ class Bigchain(object):
             asset (str): unique hash of this asset
 
         Returns:
-            transcation
+            transcation(s)?
         """
-        pass
+        # get all transactions in which 'asset'== asset
+        response = r.table('bigchain') \
+            .concat_map(lambda doc: doc['block']['transactions']) \
+            .filter(lambda tx: tx['transaction']['data']['payload']\
+            ['asset']==asset).run(self.conn)
+        rtx = []
+        for tx in response:
+            # disregard transactions from invalid blocks
+            validity = self.get_blocks_status_containing_tx(tx['id'])
+            if Bigchain.BLOCK_VALID not in validity.values():
+                if Bigchain.BLOCK_UNDECIDED not in validity.values():
+                    continue
+            rtx.append(tx
+        rtx.sort(key=lambda d:d["timestamp"],reverse=True)
+        return rtx[0]
 
     def get_owner(self,asset):
         """get current owner of given asset
