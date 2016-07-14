@@ -68,3 +68,6 @@ target/
 
 # Private key files from AWS
 *.pem
+.idea/misc.xml
+.idea/Simplechaindb.iml
+.idea/workspace.xml
