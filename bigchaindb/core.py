@@ -12,7 +12,7 @@ from bigchaindb import exceptions
 from bigchaindb import crypto
 
 # added import
-from bigchaindb import payload
+from bigchaindb import payload as p
 
 class GenesisBlockAlreadyExistsError(Exception):
     pass
@@ -654,7 +654,7 @@ class Bigchain(object):
             pub_key (str): public key of  owner.
             payload (dict): the payload of this transaction,currency type.
         """
-        if payload.validate_payload_format(payload_dic):
+        if p.validate_payload_format(payload_dic):
             tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
             tx_signed = self.sign_transaction(tx, self.me_private)
             self.write_transaction(tx_signed)
@@ -673,7 +673,7 @@ class Bigchain(object):
             new_owner_pub (str): public key of new owner.
             payload (dict): the payload of this transaction,currency type.
         """
-        if payload.validate_payload_format(payload_dic):
+        if p.validate_payload_format(payload_dic):
             tx = self.create_transaction(old_owner_pub, new_owner_pub, transaction, "TRANSFER", payload_dic)
             tx_signed = self.sign_transaction(tx, old_owner_priv)
             self.write_transaction(tx_signed)
@@ -709,11 +709,13 @@ class Bigchain(object):
         Returns:
             dict: database response
         """
-
-        transaction = self.create_transaction([self.me], pub_key, None, 'CREATE', payload=payload)
-        transaction_signed = self.sign_transaction(transaction, self.me_private)
-        response = self.write_transaction(transaction_signed)
-        return response
+        if p.validate_payload_format(payload):
+            transaction = self.create_transaction([self.me], pub_key, None, 'CREATE', payload=payload)
+            transaction_signed = self.sign_transaction(transaction, self.me_private)
+            response = self.write_transaction(transaction_signed)
+            return response
+        else:
+            print("Error occurred in payload format!Please check!")
 
 
     def get_tx_by_asset(self,asset):
@@ -723,13 +725,12 @@ class Bigchain(object):
             asset (str): unique hash of this asset
 
         Returns:
-            transcation(s)?
+            transcation
         """
         # get all transactions in which 'asset'== asset
         response = r.table('bigchain') \
             .concat_map(lambda doc: doc['block']['transactions']) \
-            .filter(lambda tx: tx['transaction']['data']['payload']\
-            ['asset']==asset).run(self.conn)
+            .filter(lambda tx: tx['transaction']['data']['payload']['asset'] == asset).run(self.conn)
         rtx = []
         for tx in response:
             # disregard transactions from invalid blocks
@@ -737,7 +738,7 @@ class Bigchain(object):
             if Bigchain.BLOCK_VALID not in validity.values():
                 if Bigchain.BLOCK_UNDECIDED not in validity.values():
                     continue
-            rtx.append(tx
+            rtx.append(tx)
         rtx.sort(key=lambda d:d["timestamp"],reverse=True)
         return rtx[0]
 
