@@ -57,8 +57,8 @@ def get_create_tx_by_pub(pub):
     return disregard_tx_from_invalid_blocks(response)
 
 
-# get transfer transaction by user public key
-def get_transfer_tx_by_pub(pub):
+# get transaction transferred to user by public key
+def get_transfer_tx_to_user_by_pub(pub):
     conn = db.get_conn()
 
     response = r.table('bigchain') \
@@ -70,3 +70,52 @@ def get_transfer_tx_by_pub(pub):
         .run(conn)
 
     return disregard_tx_from_invalid_blocks(response)
+
+
+# get transaction transferred from user by public key
+def get_transfer_tx_from_user_by_pub(pub):
+    conn = db.get_conn()
+
+    response = r.table('bigchain') \
+        .concat_map(lambda doc: doc['block']['transactions']) \
+        .filter(lambda tmp: tmp['transaction']['operation'] == 'TRANSFER') \
+        .filter(lambda tx: tx['transaction']['fulfillments']
+                .contains(lambda c: c['current_owners']
+                          .contains(pub))) \
+        .run(conn)
+
+    return disregard_tx_from_invalid_blocks(response)
+
+
+# get transaction by user public key
+def get_transfer_tx_by_pub(pub):
+    conn = db.get_conn()
+
+    response = (r.table('bigchain') \
+        .concat_map(lambda doc: doc['block']['transactions']) \
+        .filter(lambda tx: tx['transaction']['conditions']
+                .contains(lambda c: c['new_owners']
+                          .contains(pub)))) | \
+               (r.table('bigchain') \
+        .concat_map(lambda doc: doc['block']['transactions']) \
+        .filter(lambda tx: tx['transaction']['fulfillments']
+                .contains(lambda c: c['current_owners']
+                          .contains(pub)))) \
+        .run(conn)
+
+    return disregard_tx_from_invalid_blocks(response)
+
+
+# get amount by user public key
+def get_amount_by_pub(pub):
+    amount = 0
+    conn = db.get_conn()
+
+    transactions = get_transfer_tx_by_pub()
+    for tx in transactions:
+        if tx['transaction']['operation'] == "CREATE":
+            amount += float(tx['transaction']['data']['payload']['amount'])
+        else:
+            amount -= float(tx['transaction']['data']['payload']['amount'])
+
+    return amount;
