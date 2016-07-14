@@ -7,7 +7,9 @@ payload_schema={
     "properties":{
         # additional description
         "msg":{"type":"string"},
-        # item,matter.such as 'reward','demand','recharge' and so on.
+        # item
+        # currency : cost/earn/charge
+        # asset :   create/transfer
         "issue":{"type":"string"},
         # on behalf of the transaction type.such as the  currency transaction or the goods assets transaction or
         # the system generate transaction .
@@ -17,7 +19,7 @@ payload_schema={
         "amount":{"type":"number"},
         # hash of goods
         "asset":{"type":"string"},
-        # total asset of the transaction owner
+        # total asset of the transaction owner,before this transaction.
         "account":{"type":"number"}
     },
     "required":["issue","category"]
