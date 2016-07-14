@@ -9,18 +9,21 @@ payload_schema={
         "msg":{"type":"string"},
         # item,matter.such as 'reward','demand','recharge' and so on.
         "issue":{"type":"string"},
-        # on behalf of the transaction type.such as the  currency transaction or the goods assets transaction.
-        "category":{"type":"string"},
+        # on behalf of the transaction type.such as the  currency transaction or the goods assets transaction or
+        # the system generate transaction .
+        # 'currency','asset','system'
+        "category":{"enum":["currency","asset","system"]},
         # amount of virtual currency
         "amount":{"type":"number"},
         # hash of goods
         "asset":{"type":"string"},
         # total asset of the transaction owner
         "account":{"type":"number"}
-    }
+    },
+    "required":["issue","category"]
 }
 
-def  validate_payload_format(payload):
+def validate_payload_format(payload):
     try:
         validate(payload,payload_schema)
         return True
@@ -28,5 +31,6 @@ def  validate_payload_format(payload):
         return False
 
 
-payload={"msg" : "i like this video.","issue" : "reward","category" : "currency", "amount" : 50.5,"asset":"hash of this video","account":3000}
+payload={"msg" : "i like this video.","issue" : "reward",
+         "category" : "currency", "amount" : 50.5,"asset":"hash of this video","account":3000}
 print(validate_payload_format(payload))

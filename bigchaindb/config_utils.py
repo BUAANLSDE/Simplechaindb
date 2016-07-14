@@ -29,11 +29,12 @@ logger = logging.getLogger(__name__)
 
 # TODO: set the default config file name
 CONFIG_DEFAULT_PATH = os.environ.setdefault(
+    # TODO: Named modification
     'BIGCHAINDB_CONFIG_PATH',
-    os.path.join(os.path.expanduser('~'), '.simplechaindb'),
+    os.path.join(os.path.expanduser('~'), '.bigchaindb'),
 )
 
-CONFIG_PREFIX = 'SIMPLECHAINDB'
+CONFIG_PREFIX = 'BIGCHAINDB'
 CONFIG_SEP = '_'
 
 
