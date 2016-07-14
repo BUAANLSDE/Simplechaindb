@@ -647,24 +647,38 @@ class Bigchain(object):
     #        get all assets of one user
     #        destroy asset
 
-    def charge_currency(self,pub_key,payload):
+    def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user
 
         Args:
             pub_key (str): public key of  owner.
             payload (dict): the payload of this transaction,currency type.
         """
+        if payload.validate_payload_format(payload_dic):
+            tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
+            tx_signed = self.sign_transaction(tx, self.me_private)
+            self.write_transaction(tx_signed)
+        else:
+            print("Error occurred in payload format!Please check!")
         pass
 
-    def transfer_currency(self,old_owner_pub,old_owner_priv,new_owner_pub,payload):
+    #There must exists one transaction to be transferred
+    def transfer_currency(self,transaction,old_owner_pub,old_owner_priv,new_owner_pub,payload_dic):
         """transfer currency from one to another
 
         Args:
+            transaction (dict): the transaction
             old_owner_pub (str): public key of old owner.
             old_owner_priv (str): private key of old owner.
             new_owner_pub (str): public key of new owner.
             payload (dict): the payload of this transaction,currency type.
         """
+        if payload.validate_payload_format(payload_dic):
+            tx = self.create_transaction(old_owner_pub, new_owner_pub, transaction, "TRANSFER", payload_dic)
+            tx_signed = self.sign_transaction(tx, old_owner_priv)
+            self.write_transaction(tx_signed)
+        else:
+            print("Error occurred in payload format!Please check!")
         pass
 
     def get_current_balance(self,pub_key):
@@ -673,6 +687,17 @@ class Bigchain(object):
         Args:
             pub_key (str): public key of the user.
         """
+        tx_id = ""
+        while tx_id != "":
+            tx_id = self.get_owned_ids(pub_key).pop()
+
+        tx = self.get_transaction(tx_id)
+        account =  float(tx['transaction']['data']['payload']['account'])
+        amount = float(tx['transaction']['data']['payload']['amount'])
+        if tx['transaction']['data']['payload']['category'] == "cost":
+            return account - amount
+        else:
+            return account + amount
         pass
 
     def create_asset(self,pub_key,payload):
