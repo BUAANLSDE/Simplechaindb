@@ -676,13 +676,19 @@ class Bigchain(object):
         pass
 
     def create_asset(self,pub_key,payload):
-        """create asset for the user
+        """create asset for the user(backlog)
 
         Args:
             pub_key (str): public key of the user.
             payload (dict): the payload of this transaction,asset type.
+        Returns:
+            dict: database response
         """
-        pass
+
+        transaction = self.create_transaction([self.me], pub_key, None, 'CREATE', payload=payload)
+        transaction_signed = self.sign_transaction(transaction, self.me_private)
+        response = self.write_transaction(transaction_signed)
+        return response
 
 
     def get_tx_by_asset(self,asset):
