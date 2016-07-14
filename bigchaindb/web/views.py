@@ -46,7 +46,7 @@ def home():
     })
 
 
-@basic_views.route('/transactions/<tx_id>')
+@basic_views.route('/transactions/tx_id=<tx_id>')
 def get_transaction(tx_id):
     """API endpoint to get details about a transaction.
 
@@ -97,3 +97,46 @@ def create_transaction():
 
     return flask.jsonify(**tx)
 
+
+@basic_views.route('/transactions/uuid=<uuid>')
+def get_transaction_by_uuid(uuid):
+    """API endpoint to get details about a transaction.
+
+        Args:
+            uuid (str): the uuid of the transaction's data part.
+
+        Return:
+            A JSON string containing the data about the transaction.
+        """
+
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        tx = bigchain.get_tx_by_payload_hash(uuid);
+
+    if not tx:
+        abort(404)
+
+    return flask.jsonify(**tx)
+
+
+@basic_views.route('/transactions/public_key=<public_key>')
+def get_transaction_by_public_key(public_key):
+    """API endpoint to get details about transactions.
+
+            Args:
+                public_key (str): the public_key of the transaction's new owners.
+
+            Return:
+                A JSON string containing the data about the transaction.
+            """
+
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        tx_ids = bigchain.get_owned_ids(public_key);
+
+    if not tx_ids:
+        abort(404)
+
+    return flask.jsonify(**tx_ids)
