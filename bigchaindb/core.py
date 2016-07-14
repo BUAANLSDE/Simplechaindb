@@ -12,7 +12,7 @@ from bigchaindb import exceptions
 from bigchaindb import crypto
 
 # added import
-from bigchaindb import payload
+from bigchaindb import payload as p
 
 class GenesisBlockAlreadyExistsError(Exception):
     pass
@@ -647,24 +647,38 @@ class Bigchain(object):
     #        get all assets of one user
     #        destroy asset
 
-    def charge_currency(self,pub_key,payload):
+    def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user
 
         Args:
             pub_key (str): public key of  owner.
             payload (dict): the payload of this transaction,currency type.
         """
+        if p.validate_payload_format(payload_dic):
+            tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
+            tx_signed = self.sign_transaction(tx, self.me_private)
+            self.write_transaction(tx_signed)
+        else:
+            print("Error occurred in payload format!Please check!")
         pass
 
-    def transfer_currency(self,old_owner_pub,old_owner_priv,new_owner_pub,payload):
+    #There must exists one transaction to be transferred
+    def transfer_currency(self,transaction,old_owner_pub,old_owner_priv,new_owner_pub,payload_dic):
         """transfer currency from one to another
 
         Args:
+            transaction (dict): the transaction
             old_owner_pub (str): public key of old owner.
             old_owner_priv (str): private key of old owner.
             new_owner_pub (str): public key of new owner.
             payload (dict): the payload of this transaction,currency type.
         """
+        if p.validate_payload_format(payload_dic):
+            tx = self.create_transaction(old_owner_pub, new_owner_pub, transaction, "TRANSFER", payload_dic)
+            tx_signed = self.sign_transaction(tx, old_owner_priv)
+            self.write_transaction(tx_signed)
+        else:
+            print("Error occurred in payload format!Please check!")
         pass
 
     def get_current_balance(self,pub_key):
@@ -673,16 +687,35 @@ class Bigchain(object):
         Args:
             pub_key (str): public key of the user.
         """
+        tx_id = ""
+        while tx_id != "":
+            tx_id = self.get_owned_ids(pub_key).pop()
+
+        tx = self.get_transaction(tx_id)
+        account =  float(tx['transaction']['data']['payload']['account'])
+        amount = float(tx['transaction']['data']['payload']['amount'])
+        if tx['transaction']['data']['payload']['category'] == "cost":
+            return account - amount
+        else:
+            return account + amount
         pass
 
     def create_asset(self,pub_key,payload):
-        """create asset for the user
+        """create asset for the user(backlog)
 
         Args:
             pub_key (str): public key of the user.
             payload (dict): the payload of this transaction,asset type.
+        Returns:
+            dict: database response
         """
-        pass
+        if p.validate_payload_format(payload):
+            transaction = self.create_transaction([self.me], pub_key, None, 'CREATE', payload=payload)
+            transaction_signed = self.sign_transaction(transaction, self.me_private)
+            response = self.write_transaction(transaction_signed)
+            return response
+        else:
+            print("Error occurred in payload format!Please check!")
 
 
     def get_tx_by_asset(self,asset):
@@ -694,7 +727,20 @@ class Bigchain(object):
         Returns:
             transcation
         """
-        pass
+        # get all transactions in which 'asset'== asset
+        response = r.table('bigchain') \
+            .concat_map(lambda doc: doc['block']['transactions']) \
+            .filter(lambda tx: tx['transaction']['data']['payload']['asset'] == asset).run(self.conn)
+        rtx = []
+        for tx in response:
+            # disregard transactions from invalid blocks
+            validity = self.get_blocks_status_containing_tx(tx['id'])
+            if Bigchain.BLOCK_VALID not in validity.values():
+                if Bigchain.BLOCK_UNDECIDED not in validity.values():
+                    continue
+            rtx.append(tx)
+        rtx.sort(key=lambda d:d["timestamp"],reverse=True)
+        return rtx[0]
 
     def get_owner(self,asset):
         """get current owner of given asset
@@ -718,22 +764,45 @@ class Bigchain(object):
             old_owner_priv (str): private key of old owner.
             new_owner_pub (str): public key of new owner.
             tx_id (str): transcation id owned by the old owner of this asset.
+
+        Returns:
+            dict: database response.
         """
-        pass
+        tx = self.get_transaction(tx_id)
+
+        transcation = self.create_transaction(old_owner_pub,new_owner_pub,tx_id,"TRANSFER",payload=tx['transaction']['data']['payload'])
+        transcation_sighed = self.sign_transaction(transcation,old_owner_priv)
+        response = self.write_transaction(transcation_sighed)
+        return response
 
     def get_owned_asset(self,pub_key):
         """get all owned asset
 
         Args:
             pub_key (str): public key of the user.
-        """
-        pass
 
-    def destory_asset(self,pub_key,asset):
+        Returns:
+            list: list of `asset-txids` currently owned by `pub_key`.
+        """
+        response = []
+        list = self.get_owned_ids(pub_key)
+        for txid in list:
+            tx = self.get_transaction(txid)
+            if tx['transaction']['data']['payload']['category'] == 'asset':
+                response.append(txid)
+        return response
+
+    def destory_asset(self,pub_key,private_key,asset):
         """destory one's asset
 
         Args:
             pub_key (str): public key of the user.
-            asset (str): unique hash of this asset
+            private_key (str): private key of the user.
+            asset (str): unique hash of this asset.
+
+        Returns:
+            dict: database response
         """
-        pass
+        tx = self.get_tx_by_asset(asset)
+        response = self.transfer_asset(pub_key,private_key,self.me,tx['id'])
+        return response
