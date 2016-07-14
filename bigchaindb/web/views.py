@@ -9,7 +9,7 @@ from flask import abort, current_app, request, Blueprint
 
 import bigchaindb
 from bigchaindb import util, version
-
+from bigchaindb import crypto
 
 info_views = Blueprint('info_views', __name__)
 basic_views = Blueprint('basic_views', __name__)
@@ -140,3 +140,101 @@ def get_transaction_by_public_key(public_key):
         abort(404)
 
     return flask.jsonify(**tx_ids)
+
+
+# assets api
+
+@basic_views.route('/assets/<public_key>')
+def get_assets_by_public_key(public_key):
+    """API endpoint to get all assets of someone.
+
+            Args:
+                public_key (str): the public_key of the user.
+
+            Return:
+                A JSON string containing the data of all assets owned by the user.
+            """
+    pass
+
+
+@basic_views.route('/assets/owner/<asset_hash>')
+def get_owner_of_asset(asset_hash):
+    """API endpoint to get the owner of asset.
+
+            Args:
+                asset_hash (str): the hash of the asset.
+
+            Return:
+                the public key of the user.
+            """
+    pass
+
+
+@basic_views.route('/assets/<public_key>/<asset_hash>', methods=['POST','GET'])
+def create_asset(publick_key,asset_hash):
+    """API endpoint to push asset to the Federation.
+
+    Return:
+        A JSON string containing the data about the asset.
+    """
+    pass
+
+# accounts api
+
+
+@basic_views.route('/accounts/<public_key>')
+def get_balance(public_key):
+    """API endpoint to get the balance of user.
+
+            Args:
+                public_key (str): the public_key of the user.
+
+            Return:
+                int>=0,balance of the user.
+            """
+    pass
+
+
+@basic_views.route('/accounts/<public_key>/<amount>',methods=['POST','GET'])
+def recharge(public_key,amount):
+    """API endpoint to recharge.
+
+            Args:
+                public_key (str): the public_key of the user.
+                amount (int): amount of charge
+            """
+    pass
+
+
+@basic_views.route('/accounts/history/<public_key>')
+def get_account_record(public_key):
+    """API endpoint to get account records of the user.
+
+            Args:
+                public_key (str): the public_key of the user.
+
+            Returns:
+                a json data of account records.
+            """
+    pass
+
+
+# other api
+
+
+@basic_views.route('/system/key/')
+def generate_key_pair():
+    """API endpoint to generate key pair.
+            Returns:
+                a json data of key pair.
+            """
+    return crypto.generate_key_pair()
+
+
+@basic_views.route('/system/key/<private_key>')
+def get_public_key(private_key):
+    """API endpoint to get corresponding public key of the private key.
+            Returns:
+                str,public key.
+            """
+    pass
