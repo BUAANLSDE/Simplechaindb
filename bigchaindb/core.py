@@ -652,7 +652,7 @@ class Bigchain(object):
 
         Args:
             pub_key (str): public key of  owner.
-            payload (dict): the payload of this transaction,currency type.
+            payload_dic (dict): the payload of this transaction,currency type.
         """
         if p.validate_payload_format(payload_dic):
             tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
