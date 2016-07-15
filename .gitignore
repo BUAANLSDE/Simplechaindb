@@ -67,3 +67,4 @@ target/
 
 # Private key files from AWS
 *.pem
+.idea
