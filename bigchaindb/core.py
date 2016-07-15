@@ -657,7 +657,8 @@ class Bigchain(object):
         if p.validate_payload_format(payload_dic):
             tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
             tx_signed = self.sign_transaction(tx, self.me_private)
-            self.write_transaction(tx_signed)
+            response = self.write_transaction(tx_signed)
+            return response
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 
@@ -675,7 +676,8 @@ class Bigchain(object):
         if p.validate_payload_format(payload_dic):
             tx = self.create_transaction(old_owner_pub, new_owner_pub, transaction, "TRANSFER", payload_dic)
             tx_signed = self.sign_transaction(tx, old_owner_priv)
-            self.write_transaction(tx_signed)
+            response = self.write_transaction(tx_signed)
+            return response
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 
