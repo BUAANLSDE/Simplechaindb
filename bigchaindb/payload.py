@@ -9,7 +9,7 @@ payload_schema={
         "msg":{"type":"string"},
         # item
         # currency : cost/earn/charge
-        # asset :   create/transfer
+        # asset :   create/transfer/destroy
         "issue":{"type":"string"},
         # on behalf of the transaction type.such as the  currency transaction or the goods assets transaction or
         # the system generate transaction .

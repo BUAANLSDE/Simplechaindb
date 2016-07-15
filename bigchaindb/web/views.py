@@ -153,6 +153,16 @@ def get_assets_by_public_key(public_key):
 
             Return:
                 A JSON string containing the data of all assets owned by the user.
+
+            json format:
+            {
+                "owner":public_key,
+                "assets":[
+                    "asset1_hash",
+                    "asset2_hash",
+                    ...
+                ]
+            }
             """
     pass
 
@@ -166,6 +176,11 @@ def get_owner_of_asset(asset_hash):
 
             Return:
                 the public key of the user.
+            json format:
+            {
+                "owner":public_key
+                "asset":asset_hash
+            }
             """
     pass
 
@@ -175,7 +190,19 @@ def create_asset(publick_key,asset_hash):
     """API endpoint to push asset to the Federation.
 
     Return:
-        A JSON string containing the data about the asset.
+        the create transaction.
+    """
+    pass
+
+
+@basic_views.route('/assets/destroy/<public_key>/<asset_hash>', methods=['POST','GET'])
+def destroy_asset(public_key,asset_hash):
+    """API endpoint to destroy asset.
+    Args:
+                public_key (str): the public_key of the user.
+                asset_hash (str): the hash of the asset.
+    Return:
+        transaction.
     """
     pass
 
@@ -191,6 +218,11 @@ def get_balance(public_key):
 
             Return:
                 int>=0,balance of the user.
+            json format:
+            {
+                "public_key":public_key,if user Non-existent,the value is None.
+                "balance":remain_sum,if user Non-existent,the value is 0 .
+            }
             """
     pass
 
@@ -202,6 +234,9 @@ def recharge(public_key,amount):
             Args:
                 public_key (str): the public_key of the user.
                 amount (int): amount of charge
+
+            Returns:
+                the charge transaction.
             """
     pass
 
@@ -215,6 +250,19 @@ def get_account_record(public_key):
 
             Returns:
                 a json data of account records.
+            json format:
+            {
+                "public_key":public_key,
+                "time_start":time_start,
+                "time_end":time_end,
+                "currency_record":[
+                    {
+                        "issue":issue,
+                        "amount":amount
+                    },
+                    ...
+                ]
+            }
             """
     pass
 
@@ -227,6 +275,11 @@ def generate_key_pair():
     """API endpoint to generate key pair.
             Returns:
                 a json data of key pair.
+                json format:
+                {
+                    "public_key":public_key,
+                    "private_key":private_key
+                }
             """
     return crypto.generate_key_pair()
 
@@ -236,5 +289,60 @@ def get_public_key(private_key):
     """API endpoint to get corresponding public key of the private key.
             Returns:
                 str,public key.
+            json format:
+            {
+                "public_key":public_key,
+                "private_key":private_key
+            }
+            """
+    pass
+
+
+@basic_views.route('/statistics/transaction')
+def stats_transactions():
+    """API endpoint to get the number of all transaction.
+            Returns:
+                a json data of various types transaction numbers .
+                json format:
+                {
+                    "total": total number,
+                    "currency_transaction": {
+                        "currency_number":currency_number,
+                        "charge_transaction":charge_number,
+                        "cost_transaction":cost_number,
+                        "earn_transaction":earn_number
+                    }
+                    "asset_transaction": {
+                        "asset_number":asset_number,
+                        "create_transaction":create_number,
+                        "transfer_transaction":transfer_number,
+                        "destroy_transaction":destroy_number
+                    }
+                }
+            """
+    pass
+
+
+@basic_views.route('/statistics/transaction/<public_key>')
+def stats_transaction_of_owner(public_key):
+    """API endpoint to get the number of all transactions for the user .
+            Returns:
+                a json data of various types transaction numbers .
+                json format:
+                {
+                    "total": total number,
+                    "currency_transaction": {
+                        "currency_number":currency_number,
+                        "charge_transaction":charge_number,
+                        "cost_transaction":cost_number,
+                        "earn_transaction":earn_number
+                    }
+                    "asset_transaction": {
+                        "asset_number":asset_number,
+                        "create_transaction":create_number,
+                        "transfer_transaction":transfer_number,
+                        "destroy_transaction":destroy_number
+                    }
+                }
             """
     pass
