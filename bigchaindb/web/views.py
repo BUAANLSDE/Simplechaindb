@@ -112,7 +112,7 @@ def get_transaction_by_uuid(uuid):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        tx = bigchain.get_tx_by_payload_hash(uuid);
+        tx = bigchain.get_tx_by_payload_hash(uuid)
 
     if not tx:
         abort(404)
@@ -134,7 +134,7 @@ def get_transaction_by_public_key(public_key):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        tx_ids = bigchain.get_owned_ids(public_key);
+        tx_ids = bigchain.get_owned_ids(public_key)
 
     if not tx_ids:
         abort(404)
@@ -164,7 +164,12 @@ def get_assets_by_public_key(public_key):
                 ]
             }
             """
-    pass
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        assets = {"owner":public_key, "assets":bigchain.get_owned_asset(public_key)}
+
+    return flask.jsonify(**assets)
 
 
 @basic_views.route('/assets/owner/<asset_hash>')
@@ -182,17 +187,39 @@ def get_owner_of_asset(asset_hash):
                 "asset":asset_hash
             }
             """
-    pass
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        owner = bigchain.get_owner(asset_hash);
+
+    if not owner:
+        abort(404)
+
+    return flask.jsonify(**owner)
 
 
 @basic_views.route('/assets/<public_key>/<asset_hash>', methods=['POST','GET'])
-def create_asset(publick_key,asset_hash):
+def create_asset(public_key,asset_hash):
     """API endpoint to push asset to the Federation.
 
     Return:
         the create transaction.
     """
-    pass
+    pool = current_app.config['bigchain_pool']
+    monitor = current_app.config['monitor']
+
+    val = {}
+
+    # `force` will try to format the body of the POST request even if the `content-type` header is not
+    # set to `application/json`
+    tx = request.get_json(force=True)
+
+    with pool() as bigchain:
+        payload = {"msg" : "create_asset","issue" : "create",
+         "category" : "asset", "amount" : 0, "asset":asset_hash, "account":0}
+        tx = bigchain.create_asset(public_key,payload)
+
+    return flask.jsonify(**tx)
 
 
 @basic_views.route('/assets/destroy/<public_key>/<asset_hash>', methods=['POST','GET'])
@@ -224,7 +251,15 @@ def get_balance(public_key):
                 "balance":remain_sum,if user Non-existent,the value is 0 .
             }
             """
-    pass
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        balance = bigchain.get_current_balance(public_key)
+
+    if not balance:
+        abort(404)
+
+    return balance
 
 
 @basic_views.route('/accounts/<public_key>/<amount>',methods=['POST','GET'])
