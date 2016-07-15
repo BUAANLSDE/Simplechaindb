@@ -659,8 +659,7 @@ class Bigchain(object):
             tx_signed = self.sign_transaction(tx, self.me_private)
             self.write_transaction(tx_signed)
         else:
-            print("Error occurred in payload format!Please check!")
-        pass
+            raise exceptions.InvalidPayload('Invalid Payload')
 
     #There must exists one transaction to be transferred
     def transfer_currency(self,transaction,old_owner_pub,old_owner_priv,new_owner_pub,payload_dic):
@@ -678,8 +677,8 @@ class Bigchain(object):
             tx_signed = self.sign_transaction(tx, old_owner_priv)
             self.write_transaction(tx_signed)
         else:
-            print("Error occurred in payload format!Please check!")
-        pass
+            raise exceptions.InvalidPayload('Invalid Payload')
+
 
     def get_current_balance(self,pub_key):
         """get current balance of the user
@@ -698,7 +697,7 @@ class Bigchain(object):
             return account - amount
         else:
             return account + amount
-        pass
+
 
     def create_asset(self,pub_key,payload):
         """create asset for the user(backlog)
@@ -715,7 +714,7 @@ class Bigchain(object):
             response = self.write_transaction(transaction_signed)
             return response
         else:
-            print("Error occurred in payload format!Please check!")
+            raise exceptions.InvalidPayload('Invalid Payload')
 
 
     def get_tx_by_asset(self,asset):
