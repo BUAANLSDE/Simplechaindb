@@ -223,7 +223,7 @@ def create_asset(public_key,asset_hash):
 
 
 @basic_views.route('/assets/destroy/<public_key>/<asset_hash>', methods=['POST','GET'])
-def destroy_asset(public_key,asset_hash):
+def destroy_asset(public_key,private_key,asset_hash):
     """API endpoint to destroy asset.
     Args:
                 public_key (str): the public_key of the user.
@@ -231,8 +231,12 @@ def destroy_asset(public_key,asset_hash):
     Return:
         transaction.
     """
-    pass
-
+    pool = current_app.config['bigchain_pool']
+    monitor = current_app.config['monitor']
+    val = {}
+    with pool() as bigchain:
+        response = bigchain.destory_asset(public_key,private_key,asset_hash)
+    return flask.jsonify(**response)
 # accounts api
 
 
@@ -273,7 +277,16 @@ def recharge(public_key,amount):
             Returns:
                 the charge transaction.
             """
-    pass
+    pool = current_app.config['bigchain_pool']
+    monitor = current_app.config['monitor']
+
+    val = {}
+    with pool() as bigchain:
+        payload = {"msg": "charge", "issue": "charge",
+                   "category": "currency", "amount": amount, "asset": "currency", "account": get_balance(public_key)}
+        tx = bigchain.charge_currency(public_key, payload)
+
+    return flask.jsonify(**tx)
 
 
 @basic_views.route('/accounts/history/<public_key>')
