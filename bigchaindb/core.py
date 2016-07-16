@@ -663,7 +663,7 @@ class Bigchain(object):
             .filter(lambda tx: tx['transaction']['conditions']
                     .contains(lambda c: c['new_owners']
                               .contains(owner))) \
-            .order_by(index=r.desc('block_transaction_timestamp')) \
+            .order_by(index=r.asc('block_transaction_timestamp')) \
             .run(self.conn)
         owned = []
 
@@ -779,7 +779,9 @@ class Bigchain(object):
         # get all transactions in which 'asset'== asset
         response = r.table('bigchain') \
             .concat_map(lambda doc: doc['block']['transactions']) \
-            .filter(lambda tx: tx['transaction']['data']['payload']['asset'] == asset).run(self.conn)
+            .filter(lambda tx: tx['transaction']['data']['payload']['asset'] == asset) \
+            .order_by(index=r.asc('block_transaction_timestamp'))\
+            .run(self.conn)
         rtx = []
         for tx in response:
             # disregard transactions from invalid blocks
@@ -788,8 +790,7 @@ class Bigchain(object):
                 if Bigchain.BLOCK_UNDECIDED not in validity.values():
                     continue
             rtx.append(tx)
-        rtx.sort(key=lambda d:d["timestamp"],reverse=True)
-        return rtx[0]
+        return rtx.pop()
 
     def get_owner(self,asset):
         """get current owner of given asset
