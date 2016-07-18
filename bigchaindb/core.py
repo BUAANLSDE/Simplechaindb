@@ -647,9 +647,52 @@ class Bigchain(object):
     #        get all assets of one user
     #        destroy asset
 
+    def get_owned_ids_by_timeorder(self, owner):
+        """Retrieve a list of `txids` that can we used has inputs.
 
+        Args:
+            owner (str): base58 encoded public key.
 
+        Returns:
+            list: list of `txids` currently owned by `owner`
+        """
 
+        # get all transactions in which owner is in the `new_owners` list
+        response = r.table('bigchain') \
+            .concat_map(lambda doc: doc['block']['transactions']) \
+            .filter(lambda tx: tx['transaction']['conditions']
+                    .contains(lambda c: c['new_owners']
+                              .contains(owner))) \
+            .order_by(index=r.asc('block_transaction_timestamp')) \
+            .run(self.conn)
+        owned = []
+
+        for tx in response:
+            # disregard transactions from invalid blocks
+            validity = self.get_blocks_status_containing_tx(tx['id'])
+            if Bigchain.BLOCK_VALID not in validity.values():
+                if Bigchain.BLOCK_UNDECIDED not in validity.values():
+                    continue
+
+            # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
+            # to get a list of outputs available to spend
+            for condition in tx['transaction']['conditions']:
+                # for simple signature conditions there are no subfulfillments
+                # check if the owner is in the condition `new_owners`
+                if len(condition['new_owners']) == 1:
+                    if condition['condition']['details']['public_key'] == owner:
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid']}
+                else:
+                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # in the condition. We need to iterate the subfulfillments to make sure there is a
+                    # subfulfillment for `owner`
+                    if util.condition_details_has_owner(condition['condition']['details'], owner):
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid']}
+                # check if input was already spent
+                if not self.get_spent(tx_input):
+                    owned.append(tx_input)
+
+        return owned
 
 
     def charge_currency(self,pub_key,payload_dic):
@@ -662,7 +705,8 @@ class Bigchain(object):
         if p.validate_payload_format(payload_dic):
             tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
             tx_signed = self.sign_transaction(tx, self.me_private)
-            self.write_transaction(tx_signed)
+            response = self.write_transaction(tx_signed)
+            return response
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 
@@ -680,7 +724,8 @@ class Bigchain(object):
         if p.validate_payload_format(payload_dic):
             tx = self.create_transaction(old_owner_pub, new_owner_pub, transaction, "TRANSFER", payload_dic)
             tx_signed = self.sign_transaction(tx, old_owner_priv)
-            self.write_transaction(tx_signed)
+            response = self.write_transaction(tx_signed)
+            return response
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 
@@ -693,7 +738,7 @@ class Bigchain(object):
         """
         tx_id = ""
         while tx_id != "":
-            tx_id = self.get_owned_ids(pub_key).pop()
+            tx_id = self.get_owned_ids_by_timeorder(pub_key).pop()
 
         tx = self.get_transaction(tx_id)
         account =  float(tx['transaction']['data']['payload']['account'])
@@ -734,7 +779,9 @@ class Bigchain(object):
         # get all transactions in which 'asset'== asset
         response = r.table('bigchain') \
             .concat_map(lambda doc: doc['block']['transactions']) \
-            .filter(lambda tx: tx['transaction']['data']['payload']['asset'] == asset).run(self.conn)
+            .filter(lambda tx: tx['transaction']['data']['payload']['asset'] == asset) \
+            .order_by(index=r.asc('block_transaction_timestamp'))\
+            .run(self.conn)
         rtx = []
         for tx in response:
             # disregard transactions from invalid blocks
@@ -743,8 +790,7 @@ class Bigchain(object):
                 if Bigchain.BLOCK_UNDECIDED not in validity.values():
                     continue
             rtx.append(tx)
-        rtx.sort(key=lambda d:d["timestamp"],reverse=True)
-        return rtx[0]
+        return rtx.pop()
 
     def get_owner(self,asset):
         """get current owner of given asset

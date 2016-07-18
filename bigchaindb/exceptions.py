@@ -36,3 +36,5 @@ class StartupError(Exception):
 
 class InvalidPayload(Exception):
     """Raised when there is an invalid payload"""
+    def __init__(self, value):
+        self.value = value
