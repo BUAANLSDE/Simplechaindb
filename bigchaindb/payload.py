@@ -20,7 +20,11 @@ payload_schema={
         # hash of goods
         "asset":{"type":"string"},
         # total asset of the transaction owner,before this transaction.
-        "account":{"type":"number"}
+        "account":{"type":"number"},
+        # previous account transaction id,if it is the first one, value should be 'genesis'.
+        "previous":{"type":"string"},
+        # trader,if issue is charge, trader is the node or null value .
+        "trader":{"type":"string"}
     },
     "required":["issue","category"]
 }

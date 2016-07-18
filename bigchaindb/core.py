@@ -647,6 +647,11 @@ class Bigchain(object):
     #        get all assets of one user
     #        destroy asset
 
+
+
+
+
+
     def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user
 

@@ -31,3 +31,4 @@ def construct_tx(payload,pubkey_A,pubkey_B):
     """construct corresponding transaction """
 
     pass
+

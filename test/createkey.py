@@ -4,9 +4,18 @@ from bigchaindb import crypto
 
 import ed25519
 import base58
-
+import json
+import flask
 private,public=crypto.generate_key_pair()
 print("public key is : "+public)
+
+dict={
+    "public_key":public,
+    "private_key":private
+}
+
+print(json.dumps(dict))
+
 
 #private.encode().decode('ascii').
 

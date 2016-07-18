@@ -281,7 +281,12 @@ def generate_key_pair():
                     "private_key":private_key
                 }
             """
-    return crypto.generate_key_pair()
+    private_key,public_key=crypto.generate_key_pair()
+    dict={
+        "public_key":public_key,
+        "private_key":private_key
+    }
+    return flask.jsonify(**dict)
 
 
 @basic_views.route('/system/key/<private_key>')
