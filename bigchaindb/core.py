@@ -794,7 +794,7 @@ class Bigchain(object):
         backloglist=self.get_backlog_currency_ids(public_key)
         bigchainlist=self.get_bigchain_currency_ids(public_key)
         lastid=tool.get_last_txid(backloglist+bigchainlist)
-        return lastid
+        return self.get_transaction(lastid)
 
     def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user

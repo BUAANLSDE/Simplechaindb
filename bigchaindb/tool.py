@@ -50,8 +50,10 @@ def get_last_txid(backlog_bigchain_list):
         else:
             tx_ids.append(item['previous'])
     tx_ids.remove('genesis')
+    # cid always 0
     if len(tx_ids) == 1:
-        return tx_ids[0]
+        last_id={'txid': tx_ids[0], 'cid':0}
+        return last_id
     else:
         # Exception
         return None
