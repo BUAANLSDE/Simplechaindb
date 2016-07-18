@@ -38,5 +38,5 @@ def validate_payload_format(payload):
 
 
 payload={"msg" : "i like this video.","issue" : "reward",
-         "category" : "currency", "amount" : 50.5,"asset":"hash of this video","account":3000}
+         "category" : "currency", "amount" : 50.5,"asset":"hash of this video","account":3000,"previous":"12345","trader":"12345"}
 print(validate_payload_format(payload))

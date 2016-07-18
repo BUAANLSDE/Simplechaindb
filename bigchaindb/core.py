@@ -13,6 +13,7 @@ from bigchaindb import crypto
 
 # added import
 from bigchaindb import payload as p
+from bigchaindb import tool
 
 class GenesisBlockAlreadyExistsError(Exception):
     pass
@@ -694,6 +695,106 @@ class Bigchain(object):
 
         return owned
 
+    def get_bigchain_currency_ids(self, owner):
+        # get all transactions in which owner is in the `new_owners` list
+        response = r.table('bigchain') \
+            .concat_map(lambda doc: doc['block']['transactions']) \
+            .filter(lambda tx: tx['transaction']['conditions']
+                    .contains(lambda c: c['new_owners']
+                              .contains(owner))) \
+            .run(self.conn)
+        owned = []
+
+        for tx in response:
+            # disregard transactions from invalid blocks
+            validity = self.get_blocks_status_containing_tx(tx['id'])
+            if Bigchain.BLOCK_VALID not in validity.values():
+                if Bigchain.BLOCK_UNDECIDED not in validity.values():
+                    continue
+
+            # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
+            # to get a list of outputs available to spend
+            for condition in tx['transaction']['conditions']:
+                # for simple signature conditions there are no subfulfillments
+                # check if the owner is in the condition `new_owners`
+                if len(condition['new_owners']) == 1:
+                    if condition['condition']['details']['public_key'] == owner:
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+                else:
+                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # in the condition. We need to iterate the subfulfillments to make sure there is a
+                    # subfulfillment for `owner`
+                    if util.condition_details_has_owner(condition['condition']['details'], owner):
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+                # check if input was already spent
+                if not self.get_spent(tx_input):
+                    if tool.get_payload_type(tx) == 'currency':
+                        owned.append(tx_input)
+
+        return owned
+
+    def get_backlog_currency_ids(self,owner):
+        """Retrieve a list of `txids` that can we used has inputs,tx is the currency type.
+
+        Args:
+            owner (str): base58 encoded public key.
+        Returns:
+            list: list of `txids` currently owned by `owner`
+            {
+                'txid':tx-id,
+                'cid':cid,
+                'previous':previous-txid
+            }
+        """
+
+        # get all transactions in which owner is in the `new_owners` list
+        response = r.table('backlog') \
+            .filter(lambda tx: tx['transaction']['conditions']
+                    .contains(lambda c: c['new_owners']
+                              .contains(owner))) \
+            .run(self.conn)
+        owned = []
+
+        for tx in response:
+            # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
+            # to get a list of outputs available to spend
+            for condition in tx['transaction']['conditions']:
+                # for simple signature conditions there are no subfulfillments
+                # check if the owner is in the condition `new_owners`
+                if len(condition['new_owners']) == 1:
+                    if condition['condition']['details']['public_key'] == owner:
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+                else:
+                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # in the condition. We need to iterate the subfulfillments to make sure there is a
+                    # subfulfillment for `owner`
+                    if util.condition_details_has_owner(condition['condition']['details'], owner):
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+                # check if input was already spent
+                if not self.get_spent(tx_input):
+                    # check tx payload type
+                    if tool.get_payload_type(tx) == 'currency':
+                        owned.append(tx_input)
+
+        return owned
+
+    def get_last_currency(self,public_key):
+        """Retrieve last `tx-id` ,tx is the currency type.
+
+        Args:
+            owner (str): base58 encoded public key.
+
+        Returns:
+             last `tx-id`.
+        """
+        backloglist=self.get_backlog_currency_ids(public_key)
+        bigchainlist=self.get_bigchain_currency_ids(public_key)
+        lastid=tool.get_last_txid(backloglist+bigchainlist)
+        return lastid
 
     def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user

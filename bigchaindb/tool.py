@@ -21,14 +21,41 @@ def get_Timestampfrom_Time(t):
     return time.mktime(time.strptime(t,'%Y-%m-%d %H:%M:%S'))
 
 
-# when user_A transfer currency to user_B, this transaction will appeared in user_B currency transaction stack.
-# this transaction will change  amount of user_B's account.
-# In order to maintain correct of  the accounts,we need to generate a corresponding transaction which will appeared in
-# user_A 's currency transaction stack and will change amount of user_A's account .
-# obviously, the two transactions are twins,which  means can only be right or wrong at the same time.
+def get_payload_type(tx):
+    """get tx's payload type"""
+    pd=tx['transaction']['data']['payload']
+    if payload.validate_payload_format(pd):
+        return pd['category']
+    else:
+        return None
 
-def construct_tx(payload,pubkey_A,pubkey_B):
-    """construct corresponding transaction """
 
-    pass
+def get_last_txid(backlog_bigchain_list):
+    """get last txid from backlog-bigchain-list
+       item's format is:
+       {
+            'txid':tx-id,
+            'cid':cid,
+            'previous':previous-txid
+       }
+    """
+    tx_ids=[]
+    for item in backlog_bigchain_list:
+        if item['txid'] in tx_ids:
+            tx_ids.remove(item['txid'])
+        else:
+            tx_ids.append(item['txid'])
+        if item['previous'] in tx_ids:
+            tx_ids.remove(item['previous'])
+        else:
+            tx_ids.append(item['previous'])
+    tx_ids.remove('genesis')
+    if len(tx_ids) == 1:
+        return tx_ids[0]
+    else:
+        # Exception
+        return None
+
+
+
 
