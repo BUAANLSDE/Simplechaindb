@@ -59,5 +59,41 @@ def get_last_txid(backlog_bigchain_list):
         return None
 
 
+def get_current_account(last_tx):
+    """get current account from last_tx"""
+    pd=last_tx['transaction']['data']['payload']
+    account=pd['account']
+    # cost/earn/charge
+    if pd['issue'] == 'cost':
+        account=account-pd['amount']
+    elif pd['issue'] == 'earn' or pd['issue'] == 'charge':
+        account=account+pd['amount']
+    else:
+        # Exception
+        return None
+    return account
 
+def get_pair_payload(transfer_payload):
+    """construct a pair of payloads by given currency transfer payload"""
+    sender_payload={
+        'msg':transfer_payload['msg'],
+        'issue':'cost',
+        'category':'currency',
+        'amount':transfer_payload['amount'],
+        'asset':transfer_payload['asset'],
+        'account':None,
+        'previous':None,
+        'trader':None
+    }
+    receiver_payload={
+        'msg':transfer_payload['msg'],
+        'issue':'earn',
+        'category':'currency',
+        'amount':transfer_payload['amount'],
+        'asset':transfer_payload['asset'],
+        'account':None,
+        'previous':None,
+        'trader':None
+    }
+    return sender_payload,receiver_payload
 

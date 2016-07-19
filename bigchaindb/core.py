@@ -809,29 +809,58 @@ class Bigchain(object):
             payload_dic (dict): the payload of this transaction,currency type.
         """
         if p.validate_payload_format(payload_dic):
+            # set payload's account¡¢previous
+            last_tx = self.get_last_currency(pub_key)
+            payload_dic['account']=tool.get_current_account(last_tx)
+            payload_dic['previous']=last_tx['id']
+            payload_dic['trader']='node'
             tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
             tx_signed = self.sign_transaction(tx, self.me_private)
-            response = self.write_transaction(tx_signed)
+            if self.is_valid_transaction(tx_signed):
+                response = self.write_transaction(tx_signed)
+            else:
+                raise exceptions.InvalidTransaction('Invalid Transaction')
             return response
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 
-    #There must exists one transaction to be transferred
-    def transfer_currency(self,transaction,old_owner_pub,old_owner_priv,new_owner_pub,payload_dic):
+    # There must exists one transaction to be transferred
+    def transfer_currency(self,sender_pub,sender_priv,receiver_pub,payload_dic):
         """transfer currency from one to another
 
         Args:
-            transaction (dict): the transaction
-            old_owner_pub (str): public key of old owner.
-            old_owner_priv (str): private key of old owner.
-            new_owner_pub (str): public key of new owner.
+            sender_pub (str): public key of sender.
+            sender_priv (str): private key of sender.
+            receiver_pub (str): public key of receiver.
             payload (dict): the payload of this transaction,currency type.
         """
         if p.validate_payload_format(payload_dic):
-            tx = self.create_transaction(old_owner_pub, new_owner_pub, transaction, "TRANSFER", payload_dic)
-            tx_signed = self.sign_transaction(tx, old_owner_priv)
-            response = self.write_transaction(tx_signed)
-            return response
+            # check the sender account
+            cost=payload_dic['amount']
+            sender_last_tx=self.get_last_currency(sender_pub)
+            sender_account=tool.get_current_account(sender_last_tx)
+            if sender_account>=cost:
+                sender_payload,receiver_payload=tool.get_pair_payload(payload_dic)
+                sender_payload['account']=sender_account
+                sender_payload['previous']=sender_last_tx['id']
+                sender_payload['trader']=receiver_pub
+                sender_tx = self.create_transaction(self.me, sender_pub, None, "CREATE",sender_payload)
+                sender_tx_signed=self.sign_transaction(sender_tx)
+                # receiver
+                receiver_last_tx=self.get_last_currency(receiver_pub)
+                receiver_account=tool.get_current_account(receiver_last_tx)
+                receiver_payload['account']=receiver_account
+                receiver_payload['previous']=receiver_last_tx['id']
+                receiver_payload['trader']=sender_pub
+                receiver_tx=self.create_transaction(self.me, receiver_pub, None, "CREATE",receiver_payload)
+                receiver_tx_signed=self.sign_transaction(receiver_tx)
+                if self.is_valid_transaction(sender_tx_signed) and self.is_valid_transaction(receiver_tx_signed):
+                    self.write_transaction(sender_tx_signed)
+                    self.write_transaction(receiver_tx_signed)
+                else:
+                    raise exceptions.InvalidTransaction('Invalid Transaction')
+            else:
+                raise exceptions.BalanceNotEnough('balance not enough')
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 

@@ -26,7 +26,7 @@ payload_schema={
         # trader,if issue is charge, trader is the node or null value .
         "trader":{"type":"string"}
     },
-    "required":["issue","category"]
+    "required":["issue","category","asset"]
 }
 
 def validate_payload_format(payload):
