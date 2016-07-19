@@ -1,24 +1,23 @@
 __author__ = 'PC-LiNing'
 
-from bigchaindb import crypto
-
+# from bigchaindb import crypto
+from  cryptoconditions import crypto
 import ed25519
 import base58
 import json
 import flask
-private,public=crypto.generate_key_pair()
-print("public key is : "+public)
+from bigchaindb import  tool
+# private,public=crypto.generate_key_pair()
 
-dict={
-    "public_key":public,
-    "private_key":private
-}
+# public key is : 63KuD28oMB6ew8HSA6ZY6WanEn483J8GooVr1AUv9gF9
+# private key is : A7iqWL6eNkgbZy1RRdywVtNHEdujYfyJShoHxRL7QwU8
 
-print(json.dumps(dict))
+# print("public key is : "+public)
+# print("private key is : "+private)
 
+private_key='A7iqWL6eNkgbZy1RRdywVtNHEdujYfyJShoHxRL7QwU8'
+# signkey=crypto.Ed25519SigningKey(private_key)
+# public_key=signkey.get_verifying_key().to_ascii()
+# print(public_key)
 
-#private.encode().decode('ascii').
-
-# sk,vk=ed25519.create_keypair()
-# private_value_base58 = crypto.Ed25519SigningKey(base58.b58encode(sk.to_bytes())).to_ascii()
-# print("private key generate public key is : "+str(sk.get_verifying_key().to_ascii(encoding="hex")))
+print(tool.get_public_key(private_key).decode())

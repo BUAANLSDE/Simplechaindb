@@ -3,6 +3,7 @@ __author__ = 'PC-LiNing'
 import time
 from bigchaindb import payload
 from collections import deque
+from cryptoconditions import  crypto
 
 """Added tools for SimpleChaindb
 
@@ -169,3 +170,10 @@ def get_currency_records(currency_queue):
         }
         records.append(record)
     return records
+
+
+def get_public_key(private_key):
+    """get corresponding public key """
+    public_key=crypto.Ed25519SigningKey(private_key).get_verifying_key().to_ascii()
+    return public_key.decode()
+
