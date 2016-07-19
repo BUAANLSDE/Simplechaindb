@@ -782,6 +782,10 @@ class Bigchain(object):
 
         return owned
 
+    def get_transaction_from_backlog(self,txid):
+        response = r.table('backlog').filter(lambda tx: tx['id'] == txid).run(self.conn)
+        return response[0]
+
     def get_last_currency(self,public_key):
         """Retrieve last `tx-id` ,tx is the currency type.
 
@@ -794,7 +798,8 @@ class Bigchain(object):
         backloglist=self.get_backlog_currency_ids(public_key)
         bigchainlist=self.get_bigchain_currency_ids(public_key)
         lastid=tool.get_last_txid(backloglist+bigchainlist)
-        return self.get_transaction(lastid)
+        tx=self.get_transaction_from_backlog(lastid['txid'])
+        return (tx if tx != None else self.get_transaction(lastid['txid']))
 
     def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user
