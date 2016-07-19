@@ -2,6 +2,7 @@ __author__ = 'PC-LiNing'
 
 import time
 from bigchaindb import payload
+from collections import deque
 
 """Added tools for SimpleChaindb
 
@@ -97,3 +98,74 @@ def get_pair_payload(transfer_payload):
     }
     return sender_payload,receiver_payload
 
+# find after
+def find_next_currency(current_currency_id,currency_list):
+    """get currency contain current currency id in given currency list"""
+    for item in currency_list:
+        if(item['payload']['previous'] == current_currency_id):
+            return item
+    return None
+
+# find before
+def find_before_currency(current_currency_previous_id,currency_list):
+    """get currency contain current currency previous id in given currency list"""
+    for item in currency_list:
+        if(item['txid'] == current_currency_previous_id):
+            return item
+    return None
+
+def sort_currency_list(currency_list):
+    """sort currency list"""
+    queue = deque()
+    queue.append(currency_list[0])
+    start=currency_list[0]
+    end=currency_list[0]
+    currency_list.remove(currency_list[0])
+    while len(currency_list) > 0:
+        # search next
+        next=find_next_currency(end['txid'],currency_list)
+        if next != None:
+            queue.append(next)
+            end=next
+        else:
+            break
+
+    while len(currency_list) > 0:
+        # search before
+        before=find_before_currency(start['payload']['previous'],currency_list)
+        if before != None:
+            queue.appendleft(before)
+            start=before
+        else:
+            break
+
+    if len(currency_list) > 0:
+        # Exception
+        return None
+    else:
+        return queue
+
+
+def get_currency_records(currency_queue):
+    """get currency records from currency queue
+       record format:
+       {
+            "issue":issue,
+            "trader":trader,
+            "asset":asset,
+            "amount":amount,
+            "time":time
+        }
+    """
+    records=[]
+    while len(currency_queue) > 0:
+        item=currency_queue.popleft()
+        record={
+            "issue":item['payload']['issue'],
+            "trader":item['payload']['trader'],
+            "asset":item['payload']['asset'],
+            "amount":item['payload']['amount'],
+            "time":get_Timefrom_Timestamp(item['timestamp'])
+        }
+        records.append(record)
+    return records

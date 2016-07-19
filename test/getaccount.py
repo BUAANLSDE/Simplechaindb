@@ -2,7 +2,7 @@ __author__ = 'PC-LiNing'
 
 from bigchaindb import tool
 
-payload={"msg" : "i like this video.","issue" : "cost","category" : "currency","amount" : 50.5,"asset":"hash of this video","account":1000}
+currency_list=[ {'txid':"B",'payload':{'previous':'C'}},{'txid':"A",'payload':{'previous':'B'}},
+                        {'txid':"C",'payload':{'previous':'D'}},{'txid':"D",'payload':{'previous':'genesis'}}]
 
-payload['account']=3000
-print(payload)
+print(tool.sort_currency_list(currency_list))

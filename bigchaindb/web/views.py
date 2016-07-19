@@ -11,6 +11,8 @@ import bigchaindb
 from bigchaindb import util, version
 from bigchaindb import crypto
 
+from bigchaindb import tool
+
 info_views = Blueprint('info_views', __name__)
 basic_views = Blueprint('basic_views', __name__)
 
@@ -190,8 +192,7 @@ def get_owner_of_asset(asset_hash):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        owner = bigchain.get_owner(asset_hash);
-
+        owner={"owner":bigchain.get_owner(asset_hash),"asset":asset_hash}
     if not owner:
         abort(404)
 
@@ -215,14 +216,20 @@ def create_asset(public_key,asset_hash):
     tx = request.get_json(force=True)
 
     with pool() as bigchain:
-        payload = {"msg" : "create_asset","issue" : "create",
-         "category" : "asset", "amount" : 0, "asset":asset_hash, "account":0}
+        payload = {
+            "msg" : "create_asset",
+            "issue" : "create",
+            "category" : "asset",
+            "amount" : 0,
+            "asset":asset_hash,
+            "account":0
+        }
         tx = bigchain.create_asset(public_key,payload)
 
     return flask.jsonify(**tx)
 
 
-@basic_views.route('/assets/destroy/<public_key>/<asset_hash>', methods=['POST','GET'])
+@basic_views.route('/assets/destroy/', methods=['POST'])
 def destroy_asset(public_key,private_key,asset_hash):
     """API endpoint to destroy asset.
     Args:
@@ -258,8 +265,7 @@ def get_balance(public_key):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        balance = bigchain.get_current_balance(public_key)
-
+        balance={"public_key":public_key,"balance":bigchain.get_current_balance(public_key)}
     if not balance:
         abort(404)
 
@@ -282,8 +288,13 @@ def recharge(public_key,amount):
 
     val = {}
     with pool() as bigchain:
-        payload = {"msg": "charge", "issue": "charge",
-                   "category": "currency", "amount": amount, "asset": "currency", "account": get_balance(public_key)}
+        payload = {
+                    "msg": "charge",
+                    "issue": "charge",
+                    "category": "currency",
+                    "amount": amount,
+                    "asset": None
+                  }
         tx = bigchain.charge_currency(public_key, payload)
 
     return flask.jsonify(**tx)
@@ -306,14 +317,26 @@ def get_account_record(public_key):
                 "currency_record":[
                     {
                         "issue":issue,
-                        "amount":amount
+                        "trader":trader,
+                        "asset":asset,
+                        "amount":amount,
+                        "time":time
                     },
                     ...
                 ]
             }
             """
-    pass
+    pool = current_app.config['bigchain_pool']
+    monitor = current_app.config['monitor']
+    with pool() as bigchain:
+        currency_list=bigchain.get_bigchain_currency_list(public_key)
+        records=tool.get_currency_records(tool.sort_currency_list(currency_list))
+        account_records={
+            "public_key":public_key,
+            "currency_record":records
+        }
 
+    return flask.jsonify(**account_records)
 
 # other api
 
