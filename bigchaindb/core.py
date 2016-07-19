@@ -871,17 +871,8 @@ class Bigchain(object):
         Args:
             pub_key (str): public key of the user.
         """
-        tx_id = ""
-        while tx_id != "":
-            tx_id = self.get_owned_ids_by_timeorder(pub_key).pop()
-
-        tx = self.get_transaction(tx_id)
-        account =  float(tx['transaction']['data']['payload']['account'])
-        amount = float(tx['transaction']['data']['payload']['amount'])
-        if tx['transaction']['data']['payload']['category'] == "cost":
-            return account - amount
-        else:
-            return account + amount
+        last_tx=self.get_last_currency(pub_key)
+        return tool.get_current_account(last_tx)
 
 
     def create_asset(self,pub_key,payload):
