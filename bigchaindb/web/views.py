@@ -371,7 +371,11 @@ def get_public_key(private_key):
                 "private_key":private_key
             }
             """
-    pass
+    key_pair={
+        "public_key":tool.get_public_key(private_key),
+        "private_key":private_key
+    }
+    return flask.jsonify(**key_pair)
 
 
 @basic_views.route('/statistics/transaction')
