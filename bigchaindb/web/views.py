@@ -193,27 +193,18 @@ def get_owner_of_asset(asset_hash):
 
     with pool() as bigchain:
         owner={"owner":bigchain.get_owner(asset_hash),"asset":asset_hash}
-    if not owner:
-        abort(404)
 
     return flask.jsonify(**owner)
 
 
-@basic_views.route('/assets/<public_key>/<asset_hash>', methods=['POST','GET'])
+@basic_views.route('/assets/create/<public_key>/<asset_hash>', methods=['POST','GET'])
 def create_asset(public_key,asset_hash):
     """API endpoint to push asset to the Federation.
-
     Return:
         the create transaction.
     """
     pool = current_app.config['bigchain_pool']
     monitor = current_app.config['monitor']
-
-    val = {}
-
-    # `force` will try to format the body of the POST request even if the `content-type` header is not
-    # set to `application/json`
-    tx = request.get_json(force=True)
 
     with pool() as bigchain:
         payload = {
@@ -222,28 +213,38 @@ def create_asset(public_key,asset_hash):
             "category" : "asset",
             "amount" : 0,
             "asset":asset_hash,
-            "account":0
+            "account":0,
+            "previous":'',
+            "trader":''
         }
         tx = bigchain.create_asset(public_key,payload)
 
     return flask.jsonify(**tx)
 
 
-@basic_views.route('/assets/destroy/', methods=['POST'])
-def destroy_asset(public_key,private_key,asset_hash):
+@basic_views.route('/assets/destroy/<public_key>', methods=['POST','GET'])
+def destroy_asset(public_key):
     """API endpoint to destroy asset.
     Args:
                 public_key (str): the public_key of the user.
                 asset_hash (str): the hash of the asset.
+        /assets/destroy/<public_key>?private_key=pri_key&asset_hash=hash
     Return:
         transaction.
     """
+    asset_hash=request.args.get('asset_hash','')
+    private_key=request.args.get('private_key','')
+
+    print('asset_hash is : '+asset_hash)
+    print('private_key is : '+private_key)
+
     pool = current_app.config['bigchain_pool']
     monitor = current_app.config['monitor']
     val = {}
     with pool() as bigchain:
         response = bigchain.destory_asset(public_key,private_key,asset_hash)
     return flask.jsonify(**response)
+
 # accounts api
 
 
@@ -269,10 +270,10 @@ def get_balance(public_key):
     if not balance:
         abort(404)
 
-    return balance
+    return flask.jsonify(**balance)
 
 
-@basic_views.route('/accounts/<public_key>/<amount>',methods=['POST','GET'])
+@basic_views.route('/accounts/charge/<public_key>/<int:amount>',methods=['POST','GET'])
 def recharge(public_key,amount):
     """API endpoint to recharge.
 
@@ -286,14 +287,16 @@ def recharge(public_key,amount):
     pool = current_app.config['bigchain_pool']
     monitor = current_app.config['monitor']
 
-    val = {}
     with pool() as bigchain:
         payload = {
                     "msg": "charge",
                     "issue": "charge",
                     "category": "currency",
                     "amount": amount,
-                    "asset": None
+                    "asset": '',
+                    "account":0,
+                    "previous":'',
+                    "trader":''
                   }
         tx = bigchain.charge_currency(public_key, payload)
 

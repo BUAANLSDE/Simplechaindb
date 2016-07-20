@@ -782,7 +782,11 @@ class Bigchain(object):
 
     def get_transaction_from_backlog(self,txid):
         response = r.table('backlog').filter(lambda tx: tx['id'] == txid).run(self.conn)
-        return response[0]
+        result=list(response)
+        if len(result) > 0:
+            return result[0]
+        else:
+            return None
 
     def get_last_currency(self,public_key):
         """Retrieve last `tx-id` ,tx is the currency type.
@@ -796,8 +800,11 @@ class Bigchain(object):
         backloglist=self.get_backlog_currency_ids(public_key)
         bigchainlist=self.get_bigchain_currency_ids(public_key)
         lastid=tool.get_last_txid(backloglist+bigchainlist)
-        tx=self.get_transaction_from_backlog(lastid['txid'])
-        return (tx if tx != None else self.get_transaction(lastid['txid']))
+        if lastid == 'init':
+            return 'init'
+        else:
+            tx=self.get_transaction_from_backlog(lastid['txid'])
+            return (tx if tx != None else self.get_transaction(lastid['txid']))
 
     def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user
@@ -809,9 +816,15 @@ class Bigchain(object):
         if p.validate_payload_format(payload_dic):
             # set payload's account¡¢previous
             last_tx = self.get_last_currency(pub_key)
-            payload_dic['account']=tool.get_current_account(last_tx)
-            payload_dic['previous']=last_tx['id']
-            payload_dic['trader']='node'
+            if last_tx == 'init':
+                payload_dic['account']=0
+                payload_dic['previous']='genesis'
+                payload_dic['trader']='node'
+            else:
+                payload_dic['account']=tool.get_current_account(last_tx)
+                payload_dic['previous']=last_tx['id']
+                payload_dic['trader']='node'
+
             tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
             tx_signed = self.sign_transaction(tx, self.me_private)
             if self.is_valid_transaction(tx_signed):
@@ -904,7 +917,6 @@ class Bigchain(object):
         response = r.table('bigchain') \
             .concat_map(lambda doc: doc['block']['transactions']) \
             .filter(lambda tx: tx['transaction']['data']['payload']['asset'] == asset) \
-            .order_by(index=r.asc('block_transaction_timestamp'))\
             .run(self.conn)
         rtx = []
         for tx in response:
@@ -914,7 +926,12 @@ class Bigchain(object):
                 if Bigchain.BLOCK_UNDECIDED not in validity.values():
                     continue
             rtx.append(tx)
-        return rtx.pop()
+
+        if len(rtx) > 0:
+            return rtx.pop()
+        else:
+            # Exception
+            None
 
     def get_owner(self,asset):
         """get current owner of given asset
@@ -926,7 +943,10 @@ class Bigchain(object):
             owner's public key
         """
         tx=self.get_tx_by_asset(asset)
-        return tx['transaction']['conditions']['new_owners']
+        if tx is not None:
+            return tx['transaction']['conditions'][0]['new_owners']
+        else:
+            return None
 
     def transfer_asset(self,old_owner_pub,old_owner_priv,new_owner_pub,tx_input):
         """transfer asset from one to another
@@ -976,6 +996,10 @@ class Bigchain(object):
                 "cid":cid
             }
         """
+        # check tx
+        if tx is None:
+            return None
+
         # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
         # to get a list of outputs available to spend
         for condition in tx['transaction']['conditions']:
@@ -1010,8 +1034,12 @@ class Bigchain(object):
         tx = self.get_tx_by_asset(asset)
         # txid={'txid':tx['id'],'cid':0}
         txid=self.get_tx_input(tx,pub_key)
-        response = self.transfer_asset(pub_key,private_key,self.me,txid['txid'])
-        return response
+        if txid is not None:
+            response = self.transfer_asset(pub_key,private_key,self.me,txid)
+            return response
+        else:
+            # Exception
+            return None
 
     def get_bigchain_currency_list(self, owner):
         """get currency queue from bigchain.
@@ -1051,13 +1079,13 @@ class Bigchain(object):
                 # check if the owner is in the condition `new_owners`
                 if len(condition['new_owners']) == 1:
                     if condition['condition']['details']['public_key'] == owner:
-                        tx_input = {'txid': tx['id'],'payload':tx['transaction']['data']['payload'],'timestmap':tx['transaction']['timestamp']}
+                        tx_input = {'txid': tx['id'],'payload':tx['transaction']['data']['payload'],'timestamp':tx['transaction']['timestamp']}
                 else:
                     # for transactions with multiple `new_owners` there will be several subfulfillments nested
                     # in the condition. We need to iterate the subfulfillments to make sure there is a
                     # subfulfillment for `owner`
                     if util.condition_details_has_owner(condition['condition']['details'], owner):
-                        tx_input = {'txid': tx['id'],'payload':tx['transaction']['data']['payload'],'timestmap':tx['transaction']['timestamp']}
+                        tx_input = {'txid': tx['id'],'payload':tx['transaction']['data']['payload'],'timestamp':tx['transaction']['timestamp']}
 
                 if tool.get_payload_type(tx) == 'currency':
                     owned.append(tx_input)
