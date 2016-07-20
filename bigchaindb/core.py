@@ -13,6 +13,7 @@ from bigchaindb import crypto
 
 # added import
 from bigchaindb import payload as p
+from bigchaindb import tool
 
 class GenesisBlockAlreadyExistsError(Exception):
     pass
@@ -694,6 +695,109 @@ class Bigchain(object):
 
         return owned
 
+    def get_bigchain_currency_ids(self, owner):
+        # get all transactions in which owner is in the `new_owners` list
+        response = r.table('bigchain') \
+            .concat_map(lambda doc: doc['block']['transactions']) \
+            .filter(lambda tx: tx['transaction']['conditions']
+                    .contains(lambda c: c['new_owners']
+                              .contains(owner))) \
+            .run(self.conn)
+        owned = []
+
+        for tx in response:
+            # disregard transactions from invalid blocks
+            validity = self.get_blocks_status_containing_tx(tx['id'])
+            if Bigchain.BLOCK_VALID not in validity.values():
+                if Bigchain.BLOCK_UNDECIDED not in validity.values():
+                    continue
+
+            # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
+            # to get a list of outputs available to spend
+            for condition in tx['transaction']['conditions']:
+                # for simple signature conditions there are no subfulfillments
+                # check if the owner is in the condition `new_owners`
+                if len(condition['new_owners']) == 1:
+                    if condition['condition']['details']['public_key'] == owner:
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+                else:
+                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # in the condition. We need to iterate the subfulfillments to make sure there is a
+                    # subfulfillment for `owner`
+                    if util.condition_details_has_owner(condition['condition']['details'], owner):
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+
+                if tool.get_payload_type(tx) == 'currency':
+                    owned.append(tx_input)
+
+        return owned
+
+    def get_backlog_currency_ids(self,owner):
+        """Retrieve a list of `txids` that can we used has inputs,tx is the currency type.
+
+        Args:
+            owner (str): base58 encoded public key.
+        Returns:
+            list: list of `txids` currently owned by `owner`
+            {
+                'txid':tx-id,
+                'cid':cid,
+                'previous':previous-txid
+            }
+        """
+
+        # get all transactions in which owner is in the `new_owners` list
+        response = r.table('backlog') \
+            .filter(lambda tx: tx['transaction']['conditions']
+                    .contains(lambda c: c['new_owners']
+                              .contains(owner))) \
+            .run(self.conn)
+        owned = []
+
+        for tx in response:
+            # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
+            # to get a list of outputs available to spend
+            for condition in tx['transaction']['conditions']:
+                # for simple signature conditions there are no subfulfillments
+                # check if the owner is in the condition `new_owners`
+                if len(condition['new_owners']) == 1:
+                    if condition['condition']['details']['public_key'] == owner:
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+                else:
+                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # in the condition. We need to iterate the subfulfillments to make sure there is a
+                    # subfulfillment for `owner`
+                    if util.condition_details_has_owner(condition['condition']['details'], owner):
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
+                            ['payload']['previous']}
+
+                # check tx payload type
+                if tool.get_payload_type(tx) == 'currency':
+                    owned.append(tx_input)
+
+        return owned
+
+    def get_transaction_from_backlog(self,txid):
+        response = r.table('backlog').filter(lambda tx: tx['id'] == txid).run(self.conn)
+        return response[0]
+
+    def get_last_currency(self,public_key):
+        """Retrieve last `tx-id` ,tx is the currency type.
+
+        Args:
+            owner (str): base58 encoded public key.
+
+        Returns:
+             last `tx-id`.
+        """
+        backloglist=self.get_backlog_currency_ids(public_key)
+        bigchainlist=self.get_bigchain_currency_ids(public_key)
+        lastid=tool.get_last_txid(backloglist+bigchainlist)
+        tx=self.get_transaction_from_backlog(lastid['txid'])
+        return (tx if tx != None else self.get_transaction(lastid['txid']))
 
     def charge_currency(self,pub_key,payload_dic):
         """charge currency for one user
@@ -703,29 +807,58 @@ class Bigchain(object):
             payload_dic (dict): the payload of this transaction,currency type.
         """
         if p.validate_payload_format(payload_dic):
+            # set payload's account¡¢previous
+            last_tx = self.get_last_currency(pub_key)
+            payload_dic['account']=tool.get_current_account(last_tx)
+            payload_dic['previous']=last_tx['id']
+            payload_dic['trader']='node'
             tx = self.create_transaction(self.me, pub_key, None, "CREATE", payload_dic)
             tx_signed = self.sign_transaction(tx, self.me_private)
-            response = self.write_transaction(tx_signed)
+            if self.is_valid_transaction(tx_signed):
+                response = self.write_transaction(tx_signed)
+            else:
+                raise exceptions.InvalidTransaction('Invalid Transaction')
             return response
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 
-    #There must exists one transaction to be transferred
-    def transfer_currency(self,transaction,old_owner_pub,old_owner_priv,new_owner_pub,payload_dic):
+    # There must exists one transaction to be transferred
+    def transfer_currency(self,sender_pub,sender_priv,receiver_pub,payload_dic):
         """transfer currency from one to another
 
         Args:
-            transaction (dict): the transaction
-            old_owner_pub (str): public key of old owner.
-            old_owner_priv (str): private key of old owner.
-            new_owner_pub (str): public key of new owner.
+            sender_pub (str): public key of sender.
+            sender_priv (str): private key of sender.
+            receiver_pub (str): public key of receiver.
             payload (dict): the payload of this transaction,currency type.
         """
         if p.validate_payload_format(payload_dic):
-            tx = self.create_transaction(old_owner_pub, new_owner_pub, transaction, "TRANSFER", payload_dic)
-            tx_signed = self.sign_transaction(tx, old_owner_priv)
-            response = self.write_transaction(tx_signed)
-            return response
+            # check the sender account
+            cost=payload_dic['amount']
+            sender_last_tx=self.get_last_currency(sender_pub)
+            sender_account=tool.get_current_account(sender_last_tx)
+            if sender_account>=cost:
+                sender_payload,receiver_payload=tool.get_pair_payload(payload_dic)
+                sender_payload['account']=sender_account
+                sender_payload['previous']=sender_last_tx['id']
+                sender_payload['trader']=receiver_pub
+                sender_tx = self.create_transaction(self.me, sender_pub, None, "CREATE",sender_payload)
+                sender_tx_signed=self.sign_transaction(sender_tx)
+                # receiver
+                receiver_last_tx=self.get_last_currency(receiver_pub)
+                receiver_account=tool.get_current_account(receiver_last_tx)
+                receiver_payload['account']=receiver_account
+                receiver_payload['previous']=receiver_last_tx['id']
+                receiver_payload['trader']=sender_pub
+                receiver_tx=self.create_transaction(self.me, receiver_pub, None, "CREATE",receiver_payload)
+                receiver_tx_signed=self.sign_transaction(receiver_tx)
+                if self.is_valid_transaction(sender_tx_signed) and self.is_valid_transaction(receiver_tx_signed):
+                    self.write_transaction(sender_tx_signed)
+                    self.write_transaction(receiver_tx_signed)
+                else:
+                    raise exceptions.InvalidTransaction('Invalid Transaction')
+            else:
+                raise exceptions.BalanceNotEnough('balance not enough')
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 
@@ -736,17 +869,8 @@ class Bigchain(object):
         Args:
             pub_key (str): public key of the user.
         """
-        tx_id = ""
-        while tx_id != "":
-            tx_id = self.get_owned_ids_by_timeorder(pub_key).pop()
-
-        tx = self.get_transaction(tx_id)
-        account =  float(tx['transaction']['data']['payload']['account'])
-        amount = float(tx['transaction']['data']['payload']['amount'])
-        if tx['transaction']['data']['payload']['category'] == "cost":
-            return account - amount
-        else:
-            return account + amount
+        last_tx=self.get_last_currency(pub_key)
+        return tool.get_current_account(last_tx)
 
 
     def create_asset(self,pub_key,payload):
@@ -759,7 +883,7 @@ class Bigchain(object):
             dict: database response
         """
         if p.validate_payload_format(payload):
-            transaction = self.create_transaction([self.me], pub_key, None, 'CREATE', payload=payload)
+            transaction = self.create_transaction(self.me, pub_key, None, 'CREATE', payload=payload)
             transaction_signed = self.sign_transaction(transaction, self.me_private)
             response = self.write_transaction(transaction_signed)
             return response
@@ -804,23 +928,20 @@ class Bigchain(object):
         tx=self.get_tx_by_asset(asset)
         return tx['transaction']['conditions']['new_owners']
 
-
-
-    def transfer_asset(self,old_owner_pub,old_owner_priv,new_owner_pub,tx_id):
+    def transfer_asset(self,old_owner_pub,old_owner_priv,new_owner_pub,tx_input):
         """transfer asset from one to another
 
         Args:
             old_owner_pub (str): public key of old owner.
             old_owner_priv (str): private key of old owner.
             new_owner_pub (str): public key of new owner.
-            tx_id (str): transcation id owned by the old owner of this asset.
+            tx_input (str): transcation  owned by the old owner of this asset.
 
         Returns:
             dict: database response.
         """
-        tx = self.get_transaction(tx_id)
-
-        transcation = self.create_transaction(old_owner_pub,new_owner_pub,tx_id,"TRANSFER",payload=tx['transaction']['data']['payload'])
+        tx = self.get_transaction(tx_input['txid'])
+        transcation = self.create_transaction(old_owner_pub,new_owner_pub,tx_input,"TRANSFER",payload=tx['transaction']['data']['payload'])
         transcation_sighed = self.sign_transaction(transcation,old_owner_priv)
         response = self.write_transaction(transcation_sighed)
         return response
@@ -834,13 +955,46 @@ class Bigchain(object):
         Returns:
             list: list of `asset-txids` currently owned by `pub_key`.
         """
-        response = []
+        assets = []
         list = self.get_owned_ids(pub_key)
         for txid in list:
-            tx = self.get_transaction(txid)
+            tx = self.get_transaction(txid['txid'])
             if tx['transaction']['data']['payload']['category'] == 'asset':
-                response.append(txid)
-        return response
+                assets.append(tx['transaction']['data']['payload']['asset'])
+        return assets
+
+    def get_tx_input(self,tx,owner):
+        """get tx_input from tx,owner.
+
+        Args:
+            tx (dict): the given transaction.
+            owner (str):the owner of the tx.
+
+        Returns:
+            {
+                "txid":tx id,
+                "cid":cid
+            }
+        """
+        # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
+        # to get a list of outputs available to spend
+        for condition in tx['transaction']['conditions']:
+            # for simple signature conditions there are no subfulfillments
+            # check if the owner is in the condition `new_owners`
+            if len(condition['new_owners']) == 1:
+                if condition['condition']['details']['public_key'] == owner:
+                    tx_input = {'txid': tx['id'], 'cid': condition['cid']}
+                else:
+                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # in the condition. We need to iterate the subfulfillments to make sure there is a
+                    # subfulfillment for `owner`
+                    if util.condition_details_has_owner(condition['condition']['details'], owner):
+                        tx_input = {'txid': tx['id'], 'cid': condition['cid']}
+        # check if input was already spent
+        if not self.get_spent(tx_input):
+            return tx_input
+        else:
+            return None
 
     def destory_asset(self,pub_key,private_key,asset):
         """destory one's asset
@@ -854,5 +1008,58 @@ class Bigchain(object):
             dict: database response
         """
         tx = self.get_tx_by_asset(asset)
-        response = self.transfer_asset(pub_key,private_key,self.me,tx['id'])
+        # txid={'txid':tx['id'],'cid':0}
+        txid=self.get_tx_input(tx,pub_key)
+        response = self.transfer_asset(pub_key,private_key,self.me,txid['txid'])
         return response
+
+    def get_bigchain_currency_list(self, owner):
+        """get currency queue from bigchain.
+
+        Args:
+            owner (str):the public key of user.
+        Returns:
+            [
+                {
+                    "txid":tx id,
+                    "payload":payload,
+                    "timestamp":timestamp
+                },
+                ...
+            ]
+        """
+        # get all transactions in which owner is in the `new_owners` list
+        response = r.table('bigchain') \
+            .concat_map(lambda doc: doc['block']['transactions']) \
+            .filter(lambda tx: tx['transaction']['conditions']
+                    .contains(lambda c: c['new_owners']
+                              .contains(owner))) \
+            .run(self.conn)
+        owned = []
+
+        for tx in response:
+            # disregard transactions from invalid blocks
+            validity = self.get_blocks_status_containing_tx(tx['id'])
+            if Bigchain.BLOCK_VALID not in validity.values():
+                if Bigchain.BLOCK_UNDECIDED not in validity.values():
+                    continue
+
+            # a transaction can contain multiple outputs (conditions) so we need to iterate over all of them
+            # to get a list of outputs available to spend
+            for condition in tx['transaction']['conditions']:
+                # for simple signature conditions there are no subfulfillments
+                # check if the owner is in the condition `new_owners`
+                if len(condition['new_owners']) == 1:
+                    if condition['condition']['details']['public_key'] == owner:
+                        tx_input = {'txid': tx['id'],'payload':tx['transaction']['data']['payload'],'timestmap':tx['transaction']['timestamp']}
+                else:
+                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # in the condition. We need to iterate the subfulfillments to make sure there is a
+                    # subfulfillment for `owner`
+                    if util.condition_details_has_owner(condition['condition']['details'], owner):
+                        tx_input = {'txid': tx['id'],'payload':tx['transaction']['data']['payload'],'timestmap':tx['transaction']['timestamp']}
+
+                if tool.get_payload_type(tx) == 'currency':
+                    owned.append(tx_input)
+
+        return owned

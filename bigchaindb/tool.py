@@ -2,6 +2,8 @@ __author__ = 'PC-LiNing'
 
 import time
 from bigchaindb import payload
+from collections import deque
+from cryptoconditions import  crypto
 
 """Added tools for SimpleChaindb
 
@@ -21,13 +23,157 @@ def get_Timestampfrom_Time(t):
     return time.mktime(time.strptime(t,'%Y-%m-%d %H:%M:%S'))
 
 
-# when user_A transfer currency to user_B, this transaction will appeared in user_B currency transaction stack.
-# this transaction will change  amount of user_B's account.
-# In order to maintain correct of  the accounts,we need to generate a corresponding transaction which will appeared in
-# user_A 's currency transaction stack and will change amount of user_A's account .
-# obviously, the two transactions are twins,which  means can only be right or wrong at the same time.
+def get_payload_type(tx):
+    """get tx's payload type"""
+    pd=tx['transaction']['data']['payload']
+    if payload.validate_payload_format(pd):
+        return pd['category']
+    else:
+        return None
 
-def construct_tx(payload,pubkey_A,pubkey_B):
-    """construct corresponding transaction """
 
-    pass
+def get_last_txid(backlog_bigchain_list):
+    """get last txid from backlog-bigchain-list
+       item's format is:
+       {
+            'txid':tx-id,
+            'cid':cid,
+            'previous':previous-txid
+       }
+    """
+    tx_ids=[]
+    for item in backlog_bigchain_list:
+        if item['txid'] in tx_ids:
+            tx_ids.remove(item['txid'])
+        else:
+            tx_ids.append(item['txid'])
+        if item['previous'] in tx_ids:
+            tx_ids.remove(item['previous'])
+        else:
+            tx_ids.append(item['previous'])
+    tx_ids.remove('genesis')
+    # cid always 0
+    if len(tx_ids) == 1:
+        last_id={'txid': tx_ids[0], 'cid':0}
+        return last_id
+    else:
+        # Exception
+        return None
+
+
+def get_current_account(last_tx):
+    """get current account from last_tx"""
+    pd=last_tx['transaction']['data']['payload']
+    account=pd['account']
+    # cost/earn/charge
+    if pd['issue'] == 'cost':
+        account=account-pd['amount']
+    elif pd['issue'] == 'earn' or pd['issue'] == 'charge':
+        account=account+pd['amount']
+    else:
+        # Exception
+        return None
+    return account
+
+def get_pair_payload(transfer_payload):
+    """construct a pair of payloads by given currency transfer payload"""
+    sender_payload={
+        'msg':transfer_payload['msg'],
+        'issue':'cost',
+        'category':'currency',
+        'amount':transfer_payload['amount'],
+        'asset':transfer_payload['asset'],
+        'account':None,
+        'previous':None,
+        'trader':None
+    }
+    receiver_payload={
+        'msg':transfer_payload['msg'],
+        'issue':'earn',
+        'category':'currency',
+        'amount':transfer_payload['amount'],
+        'asset':transfer_payload['asset'],
+        'account':None,
+        'previous':None,
+        'trader':None
+    }
+    return sender_payload,receiver_payload
+
+# find after
+def find_next_currency(current_currency_id,currency_list):
+    """get currency contain current currency id in given currency list"""
+    for item in currency_list:
+        if(item['payload']['previous'] == current_currency_id):
+            return item
+    return None
+
+# find before
+def find_before_currency(current_currency_previous_id,currency_list):
+    """get currency contain current currency previous id in given currency list"""
+    for item in currency_list:
+        if(item['txid'] == current_currency_previous_id):
+            return item
+    return None
+
+def sort_currency_list(currency_list):
+    """sort currency list"""
+    queue = deque()
+    queue.append(currency_list[0])
+    start=currency_list[0]
+    end=currency_list[0]
+    currency_list.remove(currency_list[0])
+    while len(currency_list) > 0:
+        # search next
+        next=find_next_currency(end['txid'],currency_list)
+        if next != None:
+            queue.append(next)
+            end=next
+        else:
+            break
+
+    while len(currency_list) > 0:
+        # search before
+        before=find_before_currency(start['payload']['previous'],currency_list)
+        if before != None:
+            queue.appendleft(before)
+            start=before
+        else:
+            break
+
+    if len(currency_list) > 0:
+        # Exception
+        return None
+    else:
+        return queue
+
+
+def get_currency_records(currency_queue):
+    """get currency records from currency queue
+       record format:
+       {
+            "issue":issue,
+            "trader":trader,
+            "asset":asset,
+            "amount":amount,
+            "time":time
+        }
+    """
+    records=[]
+    while len(currency_queue) > 0:
+        item=currency_queue.popleft()
+        record={
+            "issue":item['payload']['issue'],
+            "trader":item['payload']['trader'],
+            "asset":item['payload']['asset'],
+            "amount":item['payload']['amount'],
+            "time":get_Timefrom_Timestamp(item['timestamp'])
+        }
+        records.append(record)
+    return records
+
+
+def get_public_key(private_key):
+    """get corresponding public key """
+    public_key=crypto.Ed25519SigningKey(private_key).get_verifying_key().to_ascii()
+    return public_key.decode()
+

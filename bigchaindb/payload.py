@@ -20,9 +20,13 @@ payload_schema={
         # hash of goods
         "asset":{"type":"string"},
         # total asset of the transaction owner,before this transaction.
-        "account":{"type":"number"}
+        "account":{"type":"number"},
+        # previous account transaction id,if it is the first one, value should be 'genesis'.
+        "previous":{"type":"string"},
+        # trader,if issue is charge, trader is the node or null value .
+        "trader":{"type":"string"}
     },
-    "required":["issue","category"]
+    "required":["issue","category","asset"]
 }
 
 def validate_payload_format(payload):
@@ -34,5 +38,5 @@ def validate_payload_format(payload):
 
 
 payload={"msg" : "i like this video.","issue" : "reward",
-         "category" : "currency", "amount" : 50.5,"asset":"hash of this video","account":3000}
+         "category" : "currency", "amount" : 50.5,"asset":"hash of this video","account":3000,"previous":"12345","trader":"12345"}
 print(validate_payload_format(payload))

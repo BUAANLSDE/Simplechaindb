@@ -34,7 +34,16 @@ class KeypairMismatchException(Exception):
 class StartupError(Exception):
     """Raised when there is an error starting up the system"""
 
+
 class InvalidPayload(Exception):
     """Raised when there is an invalid payload"""
     def __init__(self, value):
         self.value = value
+
+
+class InvalidTransaction(Exception):
+    """Raised when there is an invalid transaction"""
+
+
+class BalanceNotEnough(Exception):
+    """Raised when sender's account is not enough"""
