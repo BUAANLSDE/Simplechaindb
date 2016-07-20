@@ -56,7 +56,7 @@ benchmarks_require = [
 ]
 
 setup(
-    name='SimplechainDB',
+    name='BigchainDB',
     version=version['__version__'],
     description='BigchainDB: A Scalable Blockchain Database',
     long_description=__doc__,
@@ -103,6 +103,7 @@ setup(
         'flask==0.10.1',
         'requests==2.9',
         'gunicorn~=19.0',
+        'jsonschema==2.5.1',
     ],
     setup_requires=['pytest-runner'],
     tests_require=tests_require,
