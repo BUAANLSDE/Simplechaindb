@@ -943,10 +943,8 @@ class Bigchain(object):
         rtx = self.get_tx_list_by_asset(asset)
 
         if len(rtx) > 0:
+            rtx = tool.sort_asset_tx_by_timestamp(rtx)
             response = rtx[0]
-            for tx in rtx:
-                if float(tx['transaction']['timestamp']) > float(response['transaction']['timestamp']):
-                    response = tx
 
             for owner in response['transaction']['conditions'][0]['new_owners']:
                 if owner in (self.nodes_except_me + [self.me]):

@@ -191,3 +191,16 @@ def get_public_key(private_key):
     public_key=crypto.Ed25519SigningKey(private_key).get_verifying_key().to_ascii()
     return public_key.decode()
 
+
+def sort_asset_tx_by_timestamp(tx_list):
+    """sort the transaction list of asset by tx_timestamp desc """
+    for i in range(0,len(tx_list)-1):
+        for j in range(i+1,len(tx_list)):
+            if float(tx_list[i]['transaction']['timestamp']) \
+                    < float(tx_list[j]['transaction']['timestamp']):
+                tmp = tx_list[i]
+                tx_list[i] = tx_list[j]
+                tx_list[j] = tmp
+
+    return tx_list
+
