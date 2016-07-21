@@ -47,3 +47,8 @@ class InvalidTransaction(Exception):
 
 class BalanceNotEnough(Exception):
     """Raised when sender's account is not enough"""
+
+
+class CurrencyListError(Exception):
+    """Raised when currency list error"""
+

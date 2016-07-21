@@ -4,6 +4,8 @@ import time
 from bigchaindb import payload
 from collections import deque
 from cryptoconditions import  crypto
+from bigchaindb import exceptions
+
 
 """Added tools for SimpleChaindb
 
@@ -41,6 +43,11 @@ def get_last_txid(backlog_bigchain_list):
             'previous':previous-txid
        }
     """
+    # check list is empty
+    # the user account is initial
+    if len(backlog_bigchain_list) == 0:
+        return 'init'
+
     tx_ids=[]
     for item in backlog_bigchain_list:
         if item['txid'] in tx_ids:
@@ -51,7 +58,12 @@ def get_last_txid(backlog_bigchain_list):
             tx_ids.remove(item['previous'])
         else:
             tx_ids.append(item['previous'])
-    tx_ids.remove('genesis')
+
+    if len(tx_ids) == 2:
+        tx_ids.remove('genesis')
+    else:
+        raise exceptions.CurrencyListError('currency list invalid')
+
     # cid always 0
     if len(tx_ids) == 1:
         last_id={'txid': tx_ids[0], 'cid':0}
@@ -127,6 +139,7 @@ def sort_currency_list(currency_list):
         next=find_next_currency(end['txid'],currency_list)
         if next != None:
             queue.append(next)
+            currency_list.remove(next)
             end=next
         else:
             break
@@ -136,6 +149,7 @@ def sort_currency_list(currency_list):
         before=find_before_currency(start['payload']['previous'],currency_list)
         if before != None:
             queue.appendleft(before)
+            currency_list.remove(before)
             start=before
         else:
             break
@@ -159,14 +173,14 @@ def get_currency_records(currency_queue):
         }
     """
     records=[]
-    while len(currency_queue) > 0:
+    while currency_queue is not None and len(currency_queue) > 0 :
         item=currency_queue.popleft()
         record={
             "issue":item['payload']['issue'],
             "trader":item['payload']['trader'],
             "asset":item['payload']['asset'],
             "amount":item['payload']['amount'],
-            "time":get_Timefrom_Timestamp(item['timestamp'])
+            "time":get_Timefrom_Timestamp(int(item['timestamp']))
         }
         records.append(record)
     return records

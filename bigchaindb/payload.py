@@ -26,7 +26,7 @@ payload_schema={
         # trader,if issue is charge, trader is the node or null value .
         "trader":{"type":"string"}
     },
-    "required":["issue","category","asset"]
+    "required":["issue","category","asset","previous"]
 }
 
 def validate_payload_format(payload):
@@ -37,6 +37,11 @@ def validate_payload_format(payload):
         return False
 
 
-payload={"msg" : "i like this video.","issue" : "reward",
-         "category" : "currency", "amount" : 50.5,"asset":"hash of this video","account":3000,"previous":"12345","trader":"12345"}
+payload = {
+            "msg": "charge",
+            "issue": "charge",
+            "category": "currency",
+            "amount": 300,
+            "asset": None
+          }
 print(validate_payload_format(payload))
