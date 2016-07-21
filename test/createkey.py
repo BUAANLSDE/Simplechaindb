@@ -1,21 +1,25 @@
 __author__ = 'PC-LiNing'
 
-
 from bigchaindb import  payload
 from bigchaindb import  tool
 from bigchaindb import Bigchain
-p = {
-            "msg" : "create_asset",
-            "issue" : "create",
-            "category" : "asset",
-            "amount" : 0,
-            "asset":"123456789",
-            "account":0,
-            "test":''
-        }
 
-p.update({'assignee': 'test'})
-print(p)
-p.pop('assignee')
-print(p)
+response1={
+    "deleted": 0,
+    "errors": 0,
+    "inserted": 1,
+    "replaced": 0,
+    "skipped": 0,
+    "unchanged": 0
+    }
 
+response2={
+    "deleted": 0,
+    "errors": 0,
+    "inserted": 1,
+    "replaced": 0,
+    "skipped": 0,
+    "unchanged": 0
+    }
+response1.update(response2)
+print(response1)

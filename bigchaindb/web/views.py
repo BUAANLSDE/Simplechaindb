@@ -245,6 +245,75 @@ def destroy_asset(public_key):
         response = bigchain.destory_asset(public_key,private_key,asset_hash)
     return flask.jsonify(**response)
 
+
+@basic_views.route('/assets/circulation/<asset_hash>')
+def get_circulation_of_asset(asset_hash):
+    """API endpoint to get circulation of asset.
+
+            Args:
+                asset_hash (str): the hash of the asset.
+
+            Return:
+                the circulation record of asset.
+            json format:
+            {
+                "asset":asset_hash,
+                "circulation_record":[
+                    {
+                        "owner":owner,
+                        "amount":amount,
+                        "time":time
+                    },
+                    ...
+                ]
+            }
+            """
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        owner={"owner":bigchain.get_owner(asset_hash),"asset":asset_hash}
+
+    return flask.jsonify(**owner)
+
+
+@basic_views.route('/assets/transfer/',methods=['POST'])
+def asset_transfer():
+    """API endpoint to asset transfer.
+
+            post data json format:
+            {
+                "sender_public_key":sender public key,
+                "sender_private_key":sender private key,
+                "receiver_public_key":receiver public key,
+                "data":{
+                    "msg": "additional message",
+                    "issue": "transfer",
+                    "category": "asset",
+                    "amount": amount,
+                    "asset": 'asset_hash',
+                    "account":0,
+                    "previous":'',
+                    "trader":''
+                }
+            }
+    """
+
+    data=request.get_json(force=True)
+    sender=data['sender_public_key']
+    sender_priv=data['sender_private_key']
+    receiver_pub=data['receiver_public_key']
+    # check payload format and values
+    payload=data['data']
+
+    pool = current_app.config['bigchain_pool']
+    monitor = current_app.config['monitor']
+
+    with pool() as bigchain:
+        tx_input=bigchain.
+        tx = bigchain.transfer_asset(sender,sender_priv,receiver_pub,tx_input)
+
+    return flask.jsonify(**tx)
+
 # accounts api
 
 
@@ -340,6 +409,44 @@ def get_account_record(public_key):
         }
 
     return flask.jsonify(**account_records)
+
+
+@basic_views.route('/accounts/transfer/',methods=['POST'])
+def currency_transfer():
+    """API endpoint to currency transfer.
+
+            post data json format:
+            {
+                "sender_public_key":sender public key,
+                "sender_private_key":sender private key,
+                "receiver_public_key":receiver public key,
+                "data":{
+                    "msg": "additional message",
+                    "issue": "transfer",
+                    "category": "currency",
+                    "amount": amount,
+                    "asset": 'asset_hash',
+                    "account":0,
+                    "previous":'',
+                    "trader":''
+                }
+            }
+    """
+
+    data=request.get_json(force=True)
+    sender=data['sender_public_key']
+    sender_priv=data['sender_private_key']
+    receiver_pub=data['receiver_public_key']
+    # check payload format and values
+    payload=data['data']
+
+    pool = current_app.config['bigchain_pool']
+    monitor = current_app.config['monitor']
+
+    with pool() as bigchain:
+        tx = bigchain.transfer_currency(sender,sender_priv,receiver_pub,payload)
+
+    return flask.jsonify(**tx)
 
 # other api
 

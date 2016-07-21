@@ -866,8 +866,9 @@ class Bigchain(object):
                 receiver_tx=self.create_transaction(self.me, receiver_pub, None, "CREATE",receiver_payload)
                 receiver_tx_signed=self.sign_transaction(receiver_tx)
                 if self.is_valid_transaction(sender_tx_signed) and self.is_valid_transaction(receiver_tx_signed):
-                    self.write_transaction(sender_tx_signed)
-                    self.write_transaction(receiver_tx_signed)
+                    sender_response=self.write_transaction(sender_tx_signed)
+                    receiver_response=self.write_transaction(receiver_tx_signed)
+                    return sender_response.update(receiver_response)
                 else:
                     raise exceptions.InvalidTransaction('Invalid Transaction')
             else:
@@ -931,7 +932,7 @@ class Bigchain(object):
             return rtx.pop()
         else:
             # Exception
-            None
+            return None
 
     def get_owner(self,asset):
         """get current owner of given asset
