@@ -904,14 +904,14 @@ class Bigchain(object):
             raise exceptions.InvalidPayload('Invalid Payload')
 
 
-    def get_tx_by_asset(self,asset):
-        """get transcation by given asset hash
+    def get_tx_list_by_asset(self,asset):
+        """get transcation list by given asset hash
 
         Args:
             asset (str): unique hash of this asset
 
         Returns:
-            transcation
+            transcation list
         """
         # get all transactions in which 'asset'== asset
         response = r.table('bigchain') \
@@ -927,17 +927,36 @@ class Bigchain(object):
                     continue
             rtx.append(tx)
 
+        return rtx
+
+
+    def get_last_tx_by_asset(self, asset):
+        """get transcation by given asset hash
+
+        Args:
+            asset (str): unique hash of this asset
+
+        Returns:
+            the last transcation contains the input asset
+        """
+        # get all transactions in which 'asset'== asset
+        rtx = self.get_tx_list_by_asset(asset)
+
         if len(rtx) > 0:
-            tx = rtx.pop()
-            for owner in tx['transaction']['conditions'][0]['new_owners']:
+            response = rtx[0]
+            for tx in rtx:
+                if float(tx['transaction']['timestamp']) > float(response['transaction']['timestamp']):
+                    response = tx
+
+            for owner in response['transaction']['conditions'][0]['new_owners']:
                 if owner in (self.nodes_except_me + [self.me]):
-                    #Exception
+                    # Exception
                     raise exceptions.InvalidAsset('The Asset does not exist')
-            else:
-                return tx
         else:
             # Exception
             raise exceptions.InvalidAsset('The Asset does not exist')
+
+        return response
 
     def get_owner(self,asset):
         """get current owner of given asset
