@@ -52,3 +52,8 @@ class BalanceNotEnough(Exception):
 class CurrencyListError(Exception):
     """Raised when currency list error"""
 
+
+class InvalidAsset(Exception):
+    """Raised when the asset does not exist or it has been destroyed"""
+    def __init__(self, value):
+        self.value = value

@@ -814,7 +814,7 @@ class Bigchain(object):
             payload_dic (dict): the payload of this transaction,currency type.
         """
         if p.validate_payload_format(payload_dic):
-            # set payload's account¡¢previous
+            # set payload's accountï¿½ï¿½previous
             last_tx = self.get_last_currency(pub_key)
             if last_tx == 'init':
                 payload_dic['account']=0
@@ -928,10 +928,16 @@ class Bigchain(object):
             rtx.append(tx)
 
         if len(rtx) > 0:
-            return rtx.pop()
+            tx = rtx.pop()
+            for owner in tx['transaction']['conditions'][0]['new_owners']:
+                if owner in (self.nodes_except_me + [self.me]):
+                    #Exception
+                    raise exceptions.InvalidAsset('The Asset does not exist')
+            else:
+                return tx
         else:
             # Exception
-            None
+            raise exceptions.InvalidAsset('The Asset does not exist')
 
     def get_owner(self,asset):
         """get current owner of given asset
