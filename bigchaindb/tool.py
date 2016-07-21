@@ -75,6 +75,9 @@ def get_last_txid(backlog_bigchain_list):
 
 def get_current_account(last_tx):
     """get current account from last_tx"""
+    # check last_tx is 'init'
+    if last_tx == 'init':
+        return 0
     pd=last_tx['transaction']['data']['payload']
     account=pd['account']
     # cost/earn/charge
@@ -202,5 +205,25 @@ def sort_asset_tx_by_timestamp(tx_list):
                 tx_list[i] = tx_list[j]
                 tx_list[j] = tmp
 
-    return tx_list
+    return deque(tx_list)
 
+
+def get_asset_records(asset_queue):
+    """get asset records from asset queue
+       record format:
+       {
+            "original_owner":original owner,
+            "current_owner":current owner,
+            "time":time
+       }
+    """
+    records=[]
+    while asset_queue is not None and len(asset_queue) > 0 :
+        item=asset_queue.pop()
+        record={
+            "original_owner":item['transaction']['fulfillments'][0]['current_owners'],
+            "current_owner":item['transaction']['conditions'][0]['new_owners'],
+            "time":get_Timefrom_Timestamp(int(item['transaction']['timestamp']))
+        }
+        records.append(record)
+    return records

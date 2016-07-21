@@ -23,3 +23,6 @@ response2={
     }
 response1.update(response2)
 print(response1)
+
+test='init'
+print(test['id'])

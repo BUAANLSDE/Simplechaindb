@@ -260,8 +260,8 @@ def get_circulation_of_asset(asset_hash):
                 "asset":asset_hash,
                 "circulation_record":[
                     {
-                        "owner":owner,
-                        "amount":amount,
+                        "original_owner":original owner,
+                        "current_owner":current owner,
                         "time":time
                     },
                     ...
@@ -271,9 +271,13 @@ def get_circulation_of_asset(asset_hash):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        owner={"owner":bigchain.get_owner(asset_hash),"asset":asset_hash}
-
-    return flask.jsonify(**owner)
+        tx_list=bigchain.get_tx_list_by_asset(asset_hash)
+        records=tool.get_asset_records(tool.sort_asset_tx_by_timestamp(tx_list))
+        asset_records={
+            "asset":asset_hash,
+            "circulation_record":records
+        }
+    return flask.jsonify(**asset_records)
 
 
 @basic_views.route('/assets/transfer/',methods=['POST'])
@@ -285,16 +289,7 @@ def asset_transfer():
                 "sender_public_key":sender public key,
                 "sender_private_key":sender private key,
                 "receiver_public_key":receiver public key,
-                "data":{
-                    "msg": "additional message",
-                    "issue": "transfer",
-                    "category": "asset",
-                    "amount": amount,
-                    "asset": 'asset_hash',
-                    "account":0,
-                    "previous":'',
-                    "trader":''
-                }
+                "asset":asset hash
             }
     """
 
@@ -302,14 +297,16 @@ def asset_transfer():
     sender=data['sender_public_key']
     sender_priv=data['sender_private_key']
     receiver_pub=data['receiver_public_key']
-    # check payload format and values
-    payload=data['data']
+    # check asset_hash is None
+    asset_hash=data['asset']
 
     pool = current_app.config['bigchain_pool']
     monitor = current_app.config['monitor']
 
     with pool() as bigchain:
-        tx_input=bigchain.
+        last_tx=bigchain.get_last_tx_by_asset(asset_hash)
+        # check the sender is the asset owner
+        tx_input=bigchain.get_tx_input(last_tx,sender)
         tx = bigchain.transfer_asset(sender,sender_priv,receiver_pub,tx_input)
 
     return flask.jsonify(**tx)

@@ -814,7 +814,7 @@ class Bigchain(object):
             payload_dic (dict): the payload of this transaction,currency type.
         """
         if p.validate_payload_format(payload_dic):
-            # set payload's account¡¢previous
+            # set payload's accountï¿½ï¿½previous
             last_tx = self.get_last_currency(pub_key)
             if last_tx == 'init':
                 payload_dic['account']=0
@@ -856,19 +856,22 @@ class Bigchain(object):
                 sender_payload['previous']=sender_last_tx['id']
                 sender_payload['trader']=receiver_pub
                 sender_tx = self.create_transaction(self.me, sender_pub, None, "CREATE",sender_payload)
-                sender_tx_signed=self.sign_transaction(sender_tx)
+                sender_tx_signed=self.sign_transaction(sender_tx,self.me_private)
                 # receiver
                 receiver_last_tx=self.get_last_currency(receiver_pub)
                 receiver_account=tool.get_current_account(receiver_last_tx)
                 receiver_payload['account']=receiver_account
-                receiver_payload['previous']=receiver_last_tx['id']
+                if receiver_last_tx == 'init':
+                    receiver_payload['previous']='genesis'
+                else:
+                    receiver_payload['previous']=receiver_last_tx['id']
                 receiver_payload['trader']=sender_pub
                 receiver_tx=self.create_transaction(self.me, receiver_pub, None, "CREATE",receiver_payload)
-                receiver_tx_signed=self.sign_transaction(receiver_tx)
+                receiver_tx_signed=self.sign_transaction(receiver_tx,self.me_private)
                 if self.is_valid_transaction(sender_tx_signed) and self.is_valid_transaction(receiver_tx_signed):
                     sender_response=self.write_transaction(sender_tx_signed)
                     receiver_response=self.write_transaction(receiver_tx_signed)
-                    return sender_response.update(receiver_response)
+                    return sender_response
                 else:
                     raise exceptions.InvalidTransaction('Invalid Transaction')
             else:
@@ -905,14 +908,14 @@ class Bigchain(object):
             raise exceptions.InvalidPayload('Invalid Payload')
 
 
-    def get_tx_by_asset(self,asset):
-        """get transcation by given asset hash
+    def get_tx_list_by_asset(self,asset):
+        """get transcation list by given asset hash
 
         Args:
             asset (str): unique hash of this asset
 
         Returns:
-            transcation
+            transcation list
         """
         # get all transactions in which 'asset'== asset
         response = r.table('bigchain') \
@@ -928,11 +931,34 @@ class Bigchain(object):
                     continue
             rtx.append(tx)
 
+        return rtx
+
+
+    def get_last_tx_by_asset(self, asset):
+        """get transcation by given asset hash
+
+        Args:
+            asset (str): unique hash of this asset
+
+        Returns:
+            the last transcation contains the input asset
+        """
+        # get all transactions in which 'asset'== asset
+        rtx = self.get_tx_list_by_asset(asset)
+
         if len(rtx) > 0:
-            return rtx.pop()
+            rtx = tool.sort_asset_tx_by_timestamp(rtx)
+            response = rtx.popleft()
+
+            for owner in response['transaction']['conditions'][0]['new_owners']:
+                if owner in (self.nodes_except_me + [self.me]):
+                    # Exception
+                    raise exceptions.InvalidAsset('The Asset does not exist')
         else:
             # Exception
-            return None
+            raise exceptions.InvalidAsset('The Asset does not exist')
+
+        return response
 
     def get_owner(self,asset):
         """get current owner of given asset
@@ -943,7 +969,7 @@ class Bigchain(object):
         Returns:
             owner's public key
         """
-        tx=self.get_tx_by_asset(asset)
+        tx=self.get_last_tx_by_asset(asset)
         if tx is not None:
             return tx['transaction']['conditions'][0]['new_owners']
         else:
@@ -1032,7 +1058,7 @@ class Bigchain(object):
         Returns:
             dict: database response
         """
-        tx = self.get_tx_by_asset(asset)
+        tx = self.get_last_tx_by_asset(asset)
         # txid={'txid':tx['id'],'cid':0}
         txid=self.get_tx_input(tx,pub_key)
         if txid is not None:
