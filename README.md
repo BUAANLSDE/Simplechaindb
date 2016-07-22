@@ -11,7 +11,7 @@
 
 保留~/.bigchaindb配置文件。
 
-安装simplebigchain
+安装simplechaindb
 ```
     进入目录下，
     sudo python3 setup.py install
