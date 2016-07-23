@@ -848,6 +848,8 @@ class Bigchain(object):
         if p.validate_payload_format(payload_dic):
             # check the sender account
             cost=payload_dic['amount']
+            if float(cost) <=0:
+                raise exceptions.InvalidPayload('Invalid Amount of Payload')
             sender_last_tx=self.get_last_currency(sender_pub)
             sender_account=tool.get_current_account(sender_last_tx)
             if sender_account>=cost:
@@ -900,10 +902,14 @@ class Bigchain(object):
             dict: database response
         """
         if p.validate_payload_format(payload):
-            transaction = self.create_transaction(self.me, pub_key, None, 'CREATE', payload=payload)
-            transaction_signed = self.sign_transaction(transaction, self.me_private)
-            response = self.write_transaction(transaction_signed)
-            return response
+            tx_list = self.get_tx_list_by_asset(payload['asset'])
+            if len(tx_list) == 0:
+                transaction = self.create_transaction(self.me, pub_key, None, 'CREATE', payload=payload)
+                transaction_signed = self.sign_transaction(transaction, self.me_private)
+                response = self.write_transaction(transaction_signed)
+                return response
+            else:
+                raise exceptions.InvalidAsset('Invalid Asset')
         else:
             raise exceptions.InvalidPayload('Invalid Payload')
 

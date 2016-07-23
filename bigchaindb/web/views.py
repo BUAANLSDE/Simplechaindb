@@ -140,7 +140,9 @@ def get_transaction_by_public_key(public_key):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        tx_ids = bigchain.get_owned_ids(public_key)
+        tx_ids = {"owner": public_key,
+                  "tx_list": bigchain.get_owned_ids(public_key)
+                  }
 
     if not tx_ids:
         #abort(404)
