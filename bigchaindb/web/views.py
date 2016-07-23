@@ -5,7 +5,7 @@ For more information please refer to the documentation in Apiary:
 """
 
 import flask
-from flask import abort, current_app, request, Blueprint
+from flask import abort, current_app, request, Blueprint, make_response
 
 import bigchaindb
 from bigchaindb import util, version
@@ -65,7 +65,9 @@ def get_transaction(tx_id):
         tx = bigchain.get_transaction(tx_id)
 
     if not tx:
-        abort(404)
+        #abort(404)
+        return make_response(get_error_message(
+            'Not Found', 'transaction', 'tx_id=' + tx_id), 404)
 
     return flask.jsonify(**tx)
 
@@ -117,7 +119,9 @@ def get_transaction_by_uuid(uuid):
         tx = bigchain.get_tx_by_payload_hash(uuid)
 
     if not tx:
-        abort(404)
+        #abort(404)
+        return make_response(get_error_message(
+            'Not Found', 'transaction', 'uuid=' + uuid))
 
     return flask.jsonify(**tx)
 
@@ -139,7 +143,10 @@ def get_transaction_by_public_key(public_key):
         tx_ids = bigchain.get_owned_ids(public_key)
 
     if not tx_ids:
-        abort(404)
+        #abort(404)
+        return make_response(get_error_message(
+            'Not Found', 'transaction', 'public key: ' + public_key
+        ))
 
     return flask.jsonify(**tx_ids)
 
@@ -334,7 +341,10 @@ def get_balance(public_key):
     with pool() as bigchain:
         balance={"public_key":public_key,"balance":bigchain.get_current_balance(public_key)}
     if not balance:
-        abort(404)
+        #abort(404)
+        return make_response(get_error_message(
+            'Not Found', 'user balance', 'public key: ' + public_key
+        ))
 
     return flask.jsonify(**balance)
 
@@ -507,7 +517,26 @@ def stats_transactions():
                     }
                 }
             """
-    pass
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        stats = {
+            "total": bigchain.get_total_tx_number(),
+            "currency_transaction": {
+                "currency_number": bigchain.get_currency_tx_number(),
+                "charge_transaction": bigchain.get_currency_tx_number_by_type("charge"),
+                "cost_transaction": bigchain.get_currency_tx_number_by_type("cost"),
+                "earn_transaction": bigchain.get_currency_tx_number_by_type("earn")
+            },
+            "asset_transaction": {
+                "asset_number": bigchain.get_asset_tx_number(),
+                "create_transaction": bigchain.get_asset_tx_number_by_type("create"),
+                "transfer_transaction": bigchain.get_asset_tx_number_by_type("transfer"),
+                "destroy_transaction": bigchain.get_asset_tx_number_by_type("destroy")
+            }
+        }
+
+    return flask.jsonify(**stats)
 
 
 @basic_views.route('/statistics/transaction/<public_key>')
@@ -532,4 +561,33 @@ def stats_transaction_of_owner(public_key):
                     }
                 }
             """
-    pass
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        stats = {
+            "total": bigchain.get_total_tx_number(public_key),
+            "currency_transaction": {
+                "currency_number": bigchain.get_currency_tx_number(public_key),
+                "charge_transaction": bigchain.get_currency_tx_number_by_type("charge",public_key),
+                "cost_transaction": bigchain.get_currency_tx_number_by_type("cost",public_key),
+                "earn_transaction": bigchain.get_currency_tx_number_by_type("earn",public_key)
+            },
+            "asset_transaction": {
+                "asset_number": bigchain.get_asset_tx_number(public_key),
+                "create_transaction": bigchain.get_asset_tx_number_by_type("create",public_key),
+                "transfer_transaction": bigchain.get_asset_tx_number_by_type("transfer",public_key),
+                "destroy_transaction": bigchain.get_asset_tx_number_by_type("destroy",public_key)
+            }
+        }
+
+    return flask.jsonify(**stats)
+
+
+def get_error_message(err, type, extra):
+    """Useful Function getting the error message to return"""
+    error_msg = flask.jsonify({
+        'error': err,
+        'type' : type,
+        'extra': extra
+    })
+    return error_msg

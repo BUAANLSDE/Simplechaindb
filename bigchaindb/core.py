@@ -1118,3 +1118,107 @@ class Bigchain(object):
                     owned.append(tx_input)
 
         return owned
+
+
+    def get_total_tx_number(self, public_key=None):
+        """get the nubmer of transaction from bigchain.
+
+        Args:
+                public_key (str):the public key of user(could be None).
+        """
+        if not public_key:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .count().run(self.conn)
+        else:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .count(lambda tx : tx['transaction']['conditions']['new_owners']
+                       .contains(public_key)).run(self.conn)
+
+        return response
+
+
+    def get_currency_tx_number(self, public_key=None):
+        """get the nubmer of currency transaction from bigchain.
+
+        Args:
+                public_key (str):the public key of user(could be None).
+        """
+        if not public_key:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "currency")\
+                .count().run(self.conn)
+        else:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "currency") \
+                .count(lambda tx: tx['transaction']['conditions']['new_owners']
+                       .contains(public_key)).run(self.conn)
+
+        return response
+
+    def get_currency_tx_number_by_type(self, type, public_key=None):
+        """get the nubmer of exact currency transaction from bigchain.
+
+        Args:
+                type (str):charge,earn or cost
+                public_key (str):the public key of user(could be None).
+        """
+        if not public_key:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['type'] == type) \
+                .count().run(self.conn)
+        else:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['type'] == type) \
+                .count(lambda tx: tx['transaction']['conditions']['new_owners']
+                       .contains(public_key)).run(self.conn)
+
+        return response
+
+    def get_asset_tx_number(self, public_key=None):
+        """get the nubmer of asset transaction from bigchain.
+
+        Args:
+                public_key (str):the public key of user(could be None).
+        """
+        if not public_key:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "asset") \
+                .count().run(self.conn)
+        else:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "asset") \
+                .count(lambda tx: tx['transaction']['conditions']['new_owners']
+                       .contains(public_key).or_(tx['transaction']['fulfillments']['current_owners']
+                                                 .contains(public_key))).run(self.conn)
+
+        return response
+
+    def get_asset_tx_number_by_type(self, type, public_key=None):
+        """get the nubmer of exact asset transaction from bigchain.
+
+        Args:
+                type (str):create,transfer or destroy
+                public_key (str):the public key of user(could be None).
+        """
+        if not public_key:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['type'] == type) \
+                .count().run(self.conn)
+        else:
+            response = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['type'] == type) \
+                .count(lambda tx: tx['transaction']['conditions']['new_owners']
+                       .contains(public_key).or_(tx['transaction']['fulfillments']['current_owners']
+                                                 .contains(public_key))).run(self.conn)
+
+        return response
