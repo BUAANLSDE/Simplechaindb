@@ -36,7 +36,7 @@ mkdir $CONFDIR
 for (( i=0; i<$NUMFILES; i++ )); do
     CONPATH=$CONFDIR"/bcdb_conf"$i
     echo "Writing "$CONPATH
-    bigchaindb -y -c $CONPATH configure
+    simplechaindb -y -c $CONPATH configure
 done
 
 
