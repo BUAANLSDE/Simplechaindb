@@ -251,7 +251,7 @@ def destroy_asset(public_key):
     monitor = current_app.config['monitor']
     val = {}
     with pool() as bigchain:
-        response = bigchain.destory_asset(public_key,private_key,asset_hash)
+        response = bigchain.destroy_asset(public_key,private_key,asset_hash)
     return flask.jsonify(**response)
 
 

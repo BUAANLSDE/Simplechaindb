@@ -1054,8 +1054,8 @@ class Bigchain(object):
         else:
             return None
 
-    def destory_asset(self,pub_key,private_key,asset):
-        """destory one's asset
+    def destroy_asset(self,pub_key,private_key,asset):
+        """destroy one's asset
 
         Args:
             pub_key (str): public key of the user.
@@ -1067,10 +1067,12 @@ class Bigchain(object):
         """
         tx = self.get_last_tx_by_asset(asset)
         # txid={'txid':tx['id'],'cid':0}
-        tx['transaction']['data']['payload']['issue'] = "destory"
+        tx['transaction']['data']['payload']['issue'] = "destroy"
         txid=self.get_tx_input(tx,pub_key)
         if txid is not None:
-            response = self.transfer_asset(pub_key,private_key,self.me,txid)
+            transcation = self.create_transaction(pub_key, self.me, txid, "TRANSFER", payload=tx['transaction']['data']['payload'])
+            transcation_sighed = self.sign_transaction(transcation, private_key)
+            response = self.write_transaction(transcation_sighed)
             return response
         else:
             # Exception
@@ -1137,12 +1139,19 @@ class Bigchain(object):
         if not public_key:
             response = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
-                .count().run(self.conn)
+                .count().run(self.conn) - 1
         else:
-            response = r.table('bigchain') \
+            response1 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
-                .count(lambda tx : tx['transaction']['conditions']['new_owners']
-                       .contains(public_key)).run(self.conn)
+                .filter(lambda tx: tx['transaction']['conditions']
+                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+
+            response2 = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['fulfillments']
+                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+
+            response = response1 + response2
 
         return response
 
@@ -1159,11 +1168,19 @@ class Bigchain(object):
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "currency")\
                 .count().run(self.conn)
         else:
-            response = r.table('bigchain') \
+            response1 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "currency") \
-                .count(lambda tx: tx['transaction']['conditions']['new_owners']
-                       .contains(public_key)).run(self.conn)
+                .filter(lambda tx: tx['transaction']['conditions']
+                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+
+            response2 = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "currency") \
+                .filter(lambda tx: tx['transaction']['fulfillments']
+                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+
+            response = response1 + response2
 
         return response
 
@@ -1180,11 +1197,19 @@ class Bigchain(object):
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
                 .count().run(self.conn)
         else:
-            response = r.table('bigchain') \
+            response1 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
-                .count(lambda tx: tx['transaction']['conditions']['new_owners']
-                       .contains(public_key)).run(self.conn)
+                .filter(lambda tx: tx['transaction']['conditions']
+                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+
+            response2 = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
+                .filter(lambda tx: tx['transaction']['fulfillments']
+                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+
+            response = response1 + response2
 
         return response
 
@@ -1200,12 +1225,19 @@ class Bigchain(object):
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "asset") \
                 .count().run(self.conn)
         else:
-            response = r.table('bigchain') \
+            response1 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "asset") \
-                .count(lambda tx: tx['transaction']['conditions']['new_owners']
-                       .contains(public_key).or_(tx['transaction']['fulfillments']['current_owners']
-                                                 .contains(public_key))).run(self.conn)
+                .filter(lambda tx: tx['transaction']['conditions']
+                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+
+            response2 = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "asset") \
+                .filter(lambda tx: tx['transaction']['fulfillments']
+                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+
+            response = response1 + response2
 
         return response
 
@@ -1222,11 +1254,18 @@ class Bigchain(object):
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
                 .count().run(self.conn)
         else:
-            response = r.table('bigchain') \
+            response1 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
-                .count(lambda tx: tx['transaction']['conditions']['new_owners']
-                       .contains(public_key).or_(tx['transaction']['fulfillments']['current_owners']
-                                                 .contains(public_key))).run(self.conn)
+                .filter(lambda tx: tx['transaction']['conditions']
+                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+
+            response2 = r.table('bigchain') \
+                .concat_map(lambda doc: doc['block']['transactions']) \
+                .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
+                .filter(lambda tx: tx['transaction']['fulfillments']
+                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+
+            response = response1 + response2
 
         return response
