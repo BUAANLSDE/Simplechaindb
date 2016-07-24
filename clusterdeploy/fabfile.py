@@ -16,11 +16,15 @@ from fabric.context_managers import settings
 
 from hostlist import public_dns_names
 
+public_hosts = []
+public_pwds = []
 f=open('blockchain-nodes')
 for line in f.readlines():
     temp=line.strip('\r\n').split(" ")
     host=temp[0]
     password=temp[1]
+    public_hosts.append(host)
+    public_pwds.append(password)
     env['passwords'][host]=password
 env['hosts']=env['passwords'].keys()
 
@@ -41,7 +45,8 @@ def set_host(host_index):
         will set env.hosts = [public_dns_names[4]]
         but only for doing fab_task_A and fab_task_B
     """
-    env.hosts = [public_dns_names[int(host_index)]]
+    env.hosts = [public_hosts[int(host_index)]]
+    env.password = [public_pwds[int(host_index)]]
 
 
 # Install base software
