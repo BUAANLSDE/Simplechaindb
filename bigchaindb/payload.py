@@ -34,14 +34,15 @@ def validate_payload_format(payload):
         validate(payload,payload_schema)
         return True
     except Exception as e:
-        return False
-
+        #return False
+        print(e)
 
 payload = {
             "msg": "charge",
             "issue": "charge",
             "category": "currency",
             "amount": 300,
-            "asset": None
+            "asset": "",
+            "previous": ""
           }
 print(validate_payload_format(payload))
