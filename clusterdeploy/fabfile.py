@@ -152,14 +152,16 @@ def send_client_confile(confile):
 # (The @hosts decorator is used to make this
 # task run on only one node. See http://tinyurl.com/h9qqf3t )
 @task
-@hosts(public_dns_names[0])
+@hosts(public_hosts[0])
+
 def init_bigchaindb():
     run('simplechaindb init', pty=False)
 
 
 # Set the number of shards (in the backlog and bigchain tables)
 @task
-@hosts(public_dns_names[0])
+@hosts(public_hosts[0])
+
 def set_shards(num_shards):
     run('simplechaindb set-shards {}'.format(num_shards))
 
