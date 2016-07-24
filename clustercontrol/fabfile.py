@@ -61,11 +61,11 @@ def rebuild_rethinkdb():
 #Start BigchainDB using screen
 @task
 def start_bigchaindb():
-    sudo("screen -d -m bigchaindb start &",pty=False)
+    sudo("screen -d -m simplechaindb start &",pty=False)
 
 @task
 def stop_bigchaindb():
-    sudo("kill `ps -ef|grep bigchaindb | grep -v grep|awk '{print $2}'` ")
+    sudo("kill `ps -ef|grep simplechaindb | grep -v grep|awk '{print $2}'` ")
 
 
 # install tools
@@ -73,4 +73,3 @@ def stop_bigchaindb():
 @parallel
 def  install_screen():
     sudo("apt-get -y install screen")
-

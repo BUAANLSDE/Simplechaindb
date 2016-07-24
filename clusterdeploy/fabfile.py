@@ -116,7 +116,7 @@ def install_bigchaindb_from_git_archive():
 @task
 @parallel
 def configure_bigchaindb():
-    run('bigchaindb -y configure', pty=False)
+    run('simplechaindb -y configure', pty=False)
 
 
 # Send the specified configuration file to
@@ -129,7 +129,7 @@ def send_confile(confile):
     put('confiles/' + confile, 'tempfile')
     run('mv tempfile ~/.bigchaindb')
     print('For this node, bigchaindb show-config says:')
-    run('bigchaindb show-config')
+    run('simplechaindb show-config')
 
 
 @task
@@ -138,7 +138,7 @@ def send_client_confile(confile):
     put(confile, 'tempfile')
     run('mv tempfile ~/.bigchaindb')
     print('For this node, bigchaindb show-config says:')
-    run('bigchaindb show-config')
+    run('simplechaindb show-config')
 
 
 # Initialize BigchainDB
@@ -149,27 +149,27 @@ def send_client_confile(confile):
 @task
 @hosts(public_dns_names[0])
 def init_bigchaindb():
-    run('bigchaindb init', pty=False)
+    run('simplechaindb init', pty=False)
 
 
 # Set the number of shards (in the backlog and bigchain tables)
 @task
 @hosts(public_dns_names[0])
 def set_shards(num_shards):
-    run('bigchaindb set-shards {}'.format(num_shards))
+    run('simplechaindb set-shards {}'.format(num_shards))
 
 
 # Start BigchainDB using screen
 @task
 @parallel
 def start_bigchaindb():
-    sudo('screen -d -m bigchaindb -y start &', pty=False)
+    sudo('screen -d -m simplechaindb -y start &', pty=False)
 
 
 @task
 @parallel
 def start_bigchaindb_load():
-    sudo('screen -d -m bigchaindb load &', pty=False)
+    sudo('screen -d -m simplechaindb load &', pty=False)
 
 
 # Install and run New Relic
