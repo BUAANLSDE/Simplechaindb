@@ -64,7 +64,7 @@ def install_base_software():
                      libglib2.0-0 libxext6 libsm6 libxrender1 \
                      git gcc g++ python3-dev libboost-python-dev \
                      software-properties-common python-software-properties \
-                     python3-setuptools ipython3 sysstat s3cmd ntp')
+                     python3-setuptools ipython3 sysstat s3cmd ntp screen')
     sudo('easy_install3 pip')
     sudo('pip3 install --upgrade pip wheel setuptools')
 
