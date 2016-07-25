@@ -40,7 +40,7 @@ def record(state):
 @info_views.route('/')
 def home():
     return flask.jsonify({
-        'software': 'BigchainDB',
+        'software': 'simplechaindb',
         'version': version.__version__,
         'public_key': bigchaindb.config['keypair']['public'],
         'keyring': bigchaindb.config['keyring'],
