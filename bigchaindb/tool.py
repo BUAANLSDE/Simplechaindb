@@ -168,6 +168,7 @@ def get_currency_records(currency_queue):
     """get currency records from currency queue
        record format:
        {
+            "msg":additional message
             "issue":issue,
             "trader":trader,
             "asset":asset,
@@ -179,6 +180,7 @@ def get_currency_records(currency_queue):
     while currency_queue is not None and len(currency_queue) > 0 :
         item=currency_queue.popleft()
         record={
+            "msg":item['payload']['msg'],
             "issue":item['payload']['issue'],
             "trader":item['payload']['trader'],
             "asset":item['payload']['asset'],

@@ -397,6 +397,7 @@ def get_account_record(public_key):
                 "time_end":time_end,
                 "currency_record":[
                     {
+                        "msg":additional message,
                         "issue":issue,
                         "trader":trader,
                         "asset":asset,
