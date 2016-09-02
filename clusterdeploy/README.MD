@@ -11,8 +11,8 @@ write_keypairs_file.py         生成一套密钥
 clusterize_confiles.py         生成一套集群的bigchaindb配置
 
 ###综合脚本
-first_setup.sh  初次安装部署启动
-update.sh       更新 [重新分配密钥drop table] TODO:轻量级update
+first_setup.sh $NUM_NODES  初次安装部署启动
+update.sh $NUM_NODES       更新 [重新分配密钥drop table] TODO:轻量级update
 
 ###部署脚本
 install_base_software.sh                 安装依赖
