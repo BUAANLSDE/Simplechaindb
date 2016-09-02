@@ -1,20 +1,24 @@
 #Simplechaindb
 
-## 安装
+A scalable blockchain database. [The whitepaper](https://www.bigchaindb.com/whitepaper/) explains what that means.
 
-删除原bigchaindb：
-    
-```
-    1.sudo pip3 uninstall bigchaindb
-    2.sudo rm -rf /usr/local/bin/bigchaindb
-```
+## Links for Everyone
+* [BigchainDB.com](https://www.bigchaindb.com/) - the main BigchainDB website, including newsletter signup
+* [Whitepaper](https://www.bigchaindb.com/whitepaper/) - outlines the motivations, goals and core algorithms of BigchainDB
+* [Roadmap](https://github.com/bigchaindb/org/blob/master/ROADMAP.md)
+* [Blog](https://medium.com/the-bigchaindb-blog)
+* [Twitter](https://twitter.com/BigchainDB)
+* [Google Group](https://groups.google.com/forum/#!forum/bigchaindb)
 
-保留~/.bigchaindb配置文件。
+## Links for Developers
+* [Documentation](http://bigchaindb.readthedocs.io/en/latest/) - for developers
+* [CONTRIBUTING.md](CONTRIBUTING.md) - how to contribute
+* [Community guidelines](CODE_OF_CONDUCT.md)
+* [Open issues](https://github.com/bigchaindb/bigchaindb/issues)
+* [Open pull requests](https://github.com/bigchaindb/bigchaindb/pulls)
+* [Gitter chatroom](https://gitter.im/bigchaindb/bigchaindb)
 
-安装simplechaindb
-```
-    进入目录下，
-    sudo python3 setup.py install
-    启动
-    simplechaindb start
-```
+## Legal
+* [Licenses](LICENSES.md) - open source & open content
+* [Imprint](https://www.bigchaindb.com/imprint/)
+* [Contact Us](https://www.bigchaindb.com/contact/)
