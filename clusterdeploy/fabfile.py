@@ -268,3 +268,56 @@ def startdb():
 @task
 def restartdb():
     sudo('/etc/init.d/rethinkdb restart')
+
+
+#
+#read blockchain-nodes and set all nodes
+@task
+@parallel
+def  set_allnodes():
+    #read by line
+    f=open('blockchain-nodes')
+    for line in f.readlines():
+        temp=line.strip('\r\n').split(" ")
+        host=temp[0]
+        password=temp[1]
+        env['passwords'][host]=password
+
+    # order
+    env['hosts']=env['passwords'].keys()
+
+
+#set on node
+@task
+@parallel
+def  set_node(host,password):
+    env['passwords'][host]=password
+    env['hosts']=env['passwords'].keys()
+
+# rethinkdb
+@task
+def start_rethinkdb():
+    sudo("service rethinkdb  start")
+
+@task
+def stop_rethinkdb():
+    sudo("service rethinkdb stop")
+
+@task
+def restart_rethinkdb():
+    sudo("service rethinkdb restart")
+
+@task
+def rebuild_rethinkdb():
+    sudo("service rethinkdb index-rebuild -n 2")
+
+#bigchaindb
+
+#Start BigchainDB using screen
+@task
+def start_bigchaindb():
+    sudo("screen -d -m simplechaindb start &",pty=False)
+
+@task
+def stop_bigchaindb():
+    sudo("kill `ps -ef|grep simplechaindb | grep -v grep|awk '{print $2}'` ")

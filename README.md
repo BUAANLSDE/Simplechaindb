@@ -1,8 +1,26 @@
 #Simplechaindb
 
-A scalable blockchain database. [The whitepaper](https://www.bigchaindb.com/whitepaper/) explains what that means.
+based on BigchainDB
 
-## Links for Everyone
+## 初次安装部署启动
+```
+git clone https://git.oschina.net/buaalining/Simplechaindb.git
+cd Simplechaindb/clusterdeploy
+vim blockchain-node         [your node info]
+./first_setup.sh $NUM_NODES [$NUM_NODES=your node number]
+e.g.
+./first_setup.sh 3
+```
+
+## 更新部署启动
+```
+cd Simplechaindb
+git pull
+cd clusterdeploy
+./update $NUM_NODES [$NUM_NODES=your node number]
+```
+
+## Links for BigchainDB
 * [BigchainDB.com](https://www.bigchaindb.com/) - the main BigchainDB website, including newsletter signup
 * [Whitepaper](https://www.bigchaindb.com/whitepaper/) - outlines the motivations, goals and core algorithms of BigchainDB
 * [Roadmap](https://github.com/bigchaindb/org/blob/master/ROADMAP.md)
