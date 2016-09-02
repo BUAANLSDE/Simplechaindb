@@ -53,13 +53,14 @@ def set_host(host_index):
 @task
 @parallel
 def install_base_software():
-    # python pip3 :
-    sudo('apt-get -y update')
-    sudo('dpkg --configure -a')
-    sudo('apt-get -y -f install')
-    sudo('apt-get -y install git gcc g++ python3-dev python3-setuptools python3-pip ntp screen')
-    sudo('pip3 install --upgrade pip')
-    sudo('pip3 --version')
+  # python pip3 :
+    with settings(warn_only=True):
+        sudo('apt-get -y update')
+        sudo('dpkg --configure -a')
+        sudo('apt-get -y -f install')
+        sudo('apt-get -y install git gcc g++ python3-dev python3-setuptools python3-pip ntp screen')
+        sudo('pip3 install --upgrade pip')
+        sudo('pip3 --version')
 
 
 # Install RethinkDB
@@ -90,13 +91,6 @@ def confiure_rethinkdb():
             use_sudo=True)
         # finally restart instance
         sudo('/etc/init.d/rethinkdb restart')
-
-# Install BigchainDB from PyPI
-@task
-@parallel
-def install_bigchaindb_from_pypi():
-    sudo('pip3 install bigchaindb')
-
 
 # Install BigchainDB from a Git archive file
 # named bigchaindb-archive.tar.gz
@@ -148,7 +142,9 @@ def send_client_confile(confile):
 @hosts(public_hosts[0])
 
 def init_bigchaindb():
-    run('simplechaindb init', pty=False)
+    with settings(warn_only=True):
+        run('simplechaindb -y drop',pty=False)
+        run('simplechaindb init', pty=False)
 
 
 # Set the number of shards (in the backlog and bigchain tables)
@@ -158,18 +154,40 @@ def init_bigchaindb():
 def set_shards(num_shards):
     run('simplechaindb set-shards {}'.format(num_shards))
 
-
 # Start BigchainDB using screen
 @task
 @parallel
 def start_bigchaindb():
-    sudo('screen -d -m simplechaindb -y start &', pty=False)
+    with settings(warn_only=True):
+        sudo('screen -d -m simplechaindb -y start &', pty=False)
 
+@task
+@parallel
+def stop_bigchaindb():
+    with settings(warn_only=True):
+        sudo("kill `ps -ef|grep simplechaindb | grep -v grep|awk '{print $2}'` ")
 
 @task
 @parallel
 def start_bigchaindb_load():
     sudo('screen -d -m simplechaindb load &', pty=False)
+
+# rethinkdb
+@task
+def start_rethinkdb():
+    sudo("service rethinkdb  start")
+
+@task
+def stop_rethinkdb():
+    sudo("service rethinkdb stop")
+
+@task
+def restart_rethinkdb():
+    sudo("service rethinkdb restart")
+
+@task
+def rebuild_rethinkdb():
+    sudo("service rethinkdb index-rebuild -n 2")
 
 
 # Install and run New Relic
@@ -247,29 +265,6 @@ def set_fw():
 #########################################################
 # Some helper-functions to handle bad behavior of cluster
 #########################################################
-
-# rebuild indexes
-@task
-@parallel
-def rebuild_indexes():
-    run('rethinkdb index-rebuild -n 2')
-
-
-@task
-def stopdb():
-    sudo('service rethinkdb stop')
-
-
-@task
-def startdb():
-    sudo('service rethinkdb start')
-
-
-@task
-def restartdb():
-    sudo('/etc/init.d/rethinkdb restart')
-
-
 #
 #read blockchain-nodes and set all nodes
 @task
@@ -294,30 +289,3 @@ def  set_node(host,password):
     env['passwords'][host]=password
     env['hosts']=env['passwords'].keys()
 
-# rethinkdb
-@task
-def start_rethinkdb():
-    sudo("service rethinkdb  start")
-
-@task
-def stop_rethinkdb():
-    sudo("service rethinkdb stop")
-
-@task
-def restart_rethinkdb():
-    sudo("service rethinkdb restart")
-
-@task
-def rebuild_rethinkdb():
-    sudo("service rethinkdb index-rebuild -n 2")
-
-#bigchaindb
-
-#Start BigchainDB using screen
-@task
-def start_bigchaindb():
-    sudo("screen -d -m simplechaindb start &",pty=False)
-
-@task
-def stop_bigchaindb():
-    sudo("kill `ps -ef|grep simplechaindb | grep -v grep|awk '{print $2}'` ")

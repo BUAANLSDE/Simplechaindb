@@ -35,8 +35,8 @@ for (( i=0; i<$NUMFILES; i++ )); do
 done
 
 
-num_pairs=$2
-NUM_NODES=$2
+num_pairs=$1
+NUM_NODES=$1
 
 python3 write_keypairs_file.py $num_pairs
 python clusterize_confiles.py -k confiles $NUM_NODES

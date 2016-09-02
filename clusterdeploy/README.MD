@@ -27,6 +27,9 @@ clustercontrol.sh  集群控制
 ./clustercontrol.sh  start   启动整个集群
 ./clustercontrol.sh  stop    关闭整个集群
 
+目前bigchain没有提供service，stop和restart command也在TODO#357.
+脚本采用screen和kill来达到start和stop，若未正常启动可多次运行[关闭-启动]脚本
+
 startnode.sh & stopnode.sh   单节点控制
 
 ./startnode.sh  -h user@host   -p password   [ -r ]  [ -b ]   启动指定的节点。 -r 启动 该节点上的rethinkdb ，-b 启动该节点上的bigchaindb。

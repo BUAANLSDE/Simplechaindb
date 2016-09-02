@@ -2,7 +2,7 @@
 
 based on BigchainDB
 
-## 初次安装部署启动
+## 初次安装部署
 ```
 git clone https://git.oschina.net/buaalining/Simplechaindb.git
 cd Simplechaindb/clusterdeploy
@@ -10,13 +10,20 @@ vim blockchain-node
 ./first_setup.sh $NUM_NODES
 ```
 
-## 更新部署启动
+## 更新
 ```
 cd Simplechaindb
 git pull
 cd clusterdeploy
 ./update $NUM_NODES
 ```
+
+## 启动关闭
+```
+cd clusterdeploy
+./clustercontrol start|stop
+```
+
 
 ## Links for BigchainDB
 * [BigchainDB.com](https://www.bigchaindb.com/) - the main BigchainDB website, including newsletter signup

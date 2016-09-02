@@ -15,7 +15,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-simplechaindb -y drop
+
 ./install_bigchaindb_from_git_archive.sh
 ./configure_bigchaindb.sh $1
 ./clustercontrol.sh stop

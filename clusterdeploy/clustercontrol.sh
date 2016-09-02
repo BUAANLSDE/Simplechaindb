@@ -13,11 +13,13 @@ fi
 if [ $1 == "start" ]
 then
    echo "start cluster..."
-   fab set_allnodes start_rethinkdb start_bigchaindb
+   fab start_rethinkdb
+   fab start_bigchaindb
 elif [ $1 == "stop" ]
 then
    echo "stop cluster..."
-   fab set_allnodes stop_bigchaindb stop_rethinkdb
+   fab stop_bigchaindb
+   fab stop_rethinkdb
 fi
 
 
