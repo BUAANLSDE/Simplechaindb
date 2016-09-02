@@ -6,8 +6,8 @@ based on BigchainDB
 ```
 git clone https://git.oschina.net/buaalining/Simplechaindb.git
 cd Simplechaindb/clusterdeploy
-vim blockchain-node         [your node info]
-./first_setup.sh $NUM_NODES [$NUM_NODES=your node number]
+vim blockchain-node
+./first_setup.sh $NUM_NODES
 ```
 
 ## 更新部署启动
@@ -15,7 +15,7 @@ vim blockchain-node         [your node info]
 cd Simplechaindb
 git pull
 cd clusterdeploy
-./update $NUM_NODES [$NUM_NODES=your node number]
+./update $NUM_NODES
 ```
 
 ## Links for BigchainDB
