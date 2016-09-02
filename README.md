@@ -8,8 +8,6 @@ git clone https://git.oschina.net/buaalining/Simplechaindb.git
 cd Simplechaindb/clusterdeploy
 vim blockchain-node         [your node info]
 ./first_setup.sh $NUM_NODES [$NUM_NODES=your node number]
-e.g.
-./first_setup.sh 3
 ```
 
 ## 更新部署启动
