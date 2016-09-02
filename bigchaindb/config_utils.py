@@ -22,14 +22,13 @@ from pkg_resources import iter_entry_points, ResolutionError
 
 import bigchaindb
 from bigchaindb.consensus import AbstractConsensusRules
+from bigchaindb import exceptions
 
 # TODO: move this to a proper configuration file for logging
 logging.getLogger('requests').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# TODO: set the default config file name
 CONFIG_DEFAULT_PATH = os.environ.setdefault(
-    # TODO: Named modification
     'BIGCHAINDB_CONFIG_PATH',
     os.path.join(os.path.expanduser('~'), '.bigchaindb'),
 )
@@ -100,7 +99,12 @@ def file_config(filename=None):
 
     logger.debug('file_config() will try to open `{}`'.format(filename))
     with open(filename) as f:
-        config = json.load(f)
+        try:
+            config = json.load(f)
+        except ValueError as err:
+            raise exceptions.ConfigurationError(
+                'Failed to parse the JSON configuration from `{}`, {}'.format(filename, err)
+            )
 
     logger.info('Configuration loaded from `{}`'.format(filename))
 
@@ -203,7 +207,7 @@ def write_config(config, filename=None):
     """Write the provided configuration to a specific location.
 
     Args:
-        newconfig (dict): a dictionary with the configuration to load.
+        config (dict): a dictionary with the configuration to load.
         filename (str): the name of the file that will store the new configuration. Defaults to ``None``.
             If ``None``, the HOME of the current user and the string ``.bigchaindb`` will be used.
     """
@@ -211,7 +215,7 @@ def write_config(config, filename=None):
         filename = CONFIG_DEFAULT_PATH
 
     with open(filename, 'w') as f:
-        json.dump(config, f)
+        json.dump(config, f, indent=4)
 
 
 def autoconfigure(filename=None, config=None, force=False):

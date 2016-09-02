@@ -1,9 +1,6 @@
-import copy
 from abc import ABCMeta, abstractmethod
 
-import bigchaindb.exceptions as exceptions
-from bigchaindb import util
-from bigchaindb import crypto
+from bigchaindb import crypto, exceptions, util
 
 
 class AbstractConsensusRules(metaclass=ABCMeta):
@@ -101,7 +98,7 @@ class AbstractConsensusRules(metaclass=ABCMeta):
             bool: True if the votes's required signature data is present
                 and correct, False otherwise.
         """
-        raise NotImplementedError
+
 
 class BaseConsensusRules(AbstractConsensusRules):
     """Base consensus rules for Bigchain.
@@ -132,18 +129,18 @@ class BaseConsensusRules(AbstractConsensusRules):
 
         # If the operation is CREATE the transaction should have no inputs and
         # should be signed by a federation node
-        if transaction['transaction']['operation'] == 'CREATE':
+        if transaction['transaction']['operation'] in ('CREATE', 'GENESIS'):
             # TODO: for now lets assume a CREATE transaction only has one fulfillment
             if transaction['transaction']['fulfillments'][0]['input']:
                 raise ValueError('A CREATE operation has no inputs')
-            # TODO: for now lets assume a CREATE transaction only has one current_owner
-            if transaction['transaction']['fulfillments'][0]['current_owners'][0] not in (
+            # TODO: for now lets assume a CREATE transaction only has one owner_before
+            if transaction['transaction']['fulfillments'][0]['owners_before'][0] not in (
                     bigchain.nodes_except_me + [bigchain.me]):
                 raise exceptions.OperationError(
                     'Only federation nodes can use the operation `CREATE`')
 
         else:
-            # check if the input exists, is owned by the current_owner
+            # check if the input exists, is owned by the owner_before
             if not transaction['transaction']['fulfillments']:
                 raise ValueError('Transaction contains no fulfillments')
 
@@ -209,24 +206,24 @@ class BaseConsensusRules(AbstractConsensusRules):
         return block
 
     @staticmethod
-    def create_transaction(current_owner, new_owner, tx_input, operation,
+    def create_transaction(owner_before, owner_after, tx_input, operation,
                            payload=None):
         """Create a new transaction
 
         Refer to the documentation of ``bigchaindb.util.create_tx``
         """
 
-        return util.create_tx(current_owner, new_owner, tx_input, operation,
+        return util.create_tx(owner_before, owner_after, tx_input, operation,
                               payload)
 
     @staticmethod
-    def sign_transaction(transaction, private_key):
+    def sign_transaction(transaction, private_key, bigchain=None):
         """Sign a transaction
 
         Refer to the documentation of ``bigchaindb.util.sign_tx``
         """
 
-        return util.sign_tx(transaction, private_key)
+        return util.sign_tx(transaction, private_key, bigchain=bigchain)
 
     @staticmethod
     def validate_fulfillments(signed_transaction):

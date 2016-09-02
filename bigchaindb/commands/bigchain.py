@@ -24,7 +24,7 @@ from bigchaindb.exceptions import (StartupError,
                                    DatabaseAlreadyExists,
                                    KeypairNotFoundException)
 from bigchaindb.commands import utils
-from bigchaindb.processes import Processes
+from bigchaindb import processes
 from bigchaindb import crypto
 
 
@@ -169,7 +169,6 @@ def run_start(args):
         sys.exit("Can't start BigchainDB, no keypair found. "
                  'Did you run `bigchaindb configure`?')
 
-    processes = Processes()
     logger.info('Starting BigchainDB main process')
     processes.start()
 
@@ -207,7 +206,7 @@ def run_load(args):
 
 def run_set_shards(args):
     b = bigchaindb.Bigchain()
-    for table in ['bigchain', 'backlog']:
+    for table in ['bigchain', 'backlog', 'votes']:
         # See https://www.rethinkdb.com/api/python/config/
         table_config = r.table(table).config().run(b.conn)
         num_replicas = len(table_config['shards'][0]['replicas'])
@@ -219,7 +218,7 @@ def run_set_shards(args):
 
 def run_set_replicas(args):
     b = bigchaindb.Bigchain()
-    for table in ['bigchain', 'backlog']:
+    for table in ['bigchain', 'backlog', 'votes']:
         # See https://www.rethinkdb.com/api/python/config/
         table_config = r.table(table).config().run(b.conn)
         num_shards = len(table_config['shards'])

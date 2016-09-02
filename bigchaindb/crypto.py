@@ -3,6 +3,7 @@
 import sha3
 from cryptoconditions import crypto
 
+
 def hash_data(data):
     """Hash the provided data using SHA3-256"""
     return sha3.sha3_256(data.encode()).hexdigest()
