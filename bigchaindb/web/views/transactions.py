@@ -3,8 +3,10 @@
 For more information please refer to the documentation on ReadTheDocs:
  - https://bigchaindb.readthedocs.io/en/latest/drivers-clients/http-client-server-api.html
 """
-from flask import current_app, request, Blueprint
-from flask_restful import Resource, Api
+
+import flask
+from flask import current_app, request, Blueprint, make_response, abort
+#from flask_restful import Resource, Api
 
 import bigchaindb
 from bigchaindb import util
@@ -12,9 +14,10 @@ from bigchaindb.web.views.base import make_error
 
 #add import buaa
 from bigchaindb import tool
+from bigchaindb import crypto
 
 transaction_views = Blueprint('transaction_views', __name__)
-transaction_api = Api(transaction_views)
+#transaction_api = Api(transaction_views)
 
 
 # Unfortunately I cannot find a reference to this decorator.
@@ -37,7 +40,82 @@ def record(state):
                          'a monitor instance to record system '
                          'performance.')
 
-#################buaa
+
+@transaction_views.route('/transactions/tx_id=<tx_id>')
+def get_transaction(tx_id):
+    """API endpoint to get details about a transaction.
+
+    Args:
+        tx_id (str): the id of the transaction.
+
+    Return:
+        A JSON string containing the data about the transaction.
+    """
+
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        tx = bigchain.get_transaction(tx_id)
+
+    if not tx:
+        #abort(404)
+        return make_response(get_error_message(
+            'Not Found', 'transaction', 'tx_id=' + tx_id), 404)
+
+    return flask.jsonify(**tx)
+
+@transaction_views.route('/transactions/tx_id=<tx_id>/status')
+def get_transaction_status(self, tx_id):
+    """API endpoint to get details about the status of a transaction.
+
+    Args:
+        tx_id (str): the id of the transaction.
+
+    Return:
+        A ``dict`` in the format ``{'status': <status>}``, where ``<status>``
+        is one of "valid", "invalid", "undecided", "backlog".
+    """
+
+    pool = current_app.config['bigchain_pool']
+
+    with pool() as bigchain:
+        status = bigchain.get_status(tx_id)
+
+    if not status:
+        return make_error(404)
+
+    return {'status': status}
+
+@transaction_views.route('/transactions/', methods=['POST'])
+def create_transaction():
+    """API endpoint to push transactions to the Federation.
+
+    Return:
+        A JSON string containing the data about the transaction.
+    """
+    pool = current_app.config['bigchain_pool']
+    monitor = current_app.config['monitor']
+
+    val = {}
+
+    # `force` will try to format the body of the POST request even if the `content-type` header is not
+    # set to `application/json`
+    tx = request.get_json(force=True)
+
+    with pool() as bigchain:
+        if tx['transaction']['operation'] == 'CREATE':
+            tx = util.transform_create(tx)
+            tx = bigchain.consensus.sign_transaction(tx, private_key=bigchain.me_private)
+
+        if not bigchain.consensus.validate_fulfillments(tx):
+            val['error'] = 'Invalid transaction fulfillments'
+
+        with monitor.timer('write_transaction', rate=bigchaindb.config['statsd']['rate']):
+            val = bigchain.write_transaction(tx)
+
+    return flask.jsonify(**tx)
+
+
 @transaction_views.route('/transactions/uuid=<uuid>')
 def get_transaction_by_uuid(uuid):
     """API endpoint to get details about a transaction.
@@ -521,6 +599,7 @@ def stats_transaction_of_owner(public_key):
 
     return flask.jsonify(**stats)
 
+
 def get_error_message(err, type, extra):
     """Useful Function getting the error message to return"""
     error_msg = flask.jsonify({
@@ -530,6 +609,8 @@ def get_error_message(err, type, extra):
     })
     return error_msg
 
+
+'''
 class TransactionApi(Resource):
     def get(self, tx_id):
         """API endpoint to get details about a transaction.
@@ -610,3 +691,4 @@ transaction_api.add_resource(TransactionStatusApi,
 transaction_api.add_resource(TransactionListApi,
                              '/transactions',
                              strict_slashes=False)
+'''
