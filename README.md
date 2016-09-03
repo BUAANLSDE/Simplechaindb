@@ -17,6 +17,12 @@ git pull
 cd clusterdeploy
 ./update $NUM_NODES
 ```
+## 基本API
+* 节点基础信息：http://ip:9984/
+* get_transaction：http://ip:9984/api/v1/transactions/tx_id=<tx_id>
+* ['POST']create_transaction：http://ip:9984/api/v1/transactions/
+* 统计：http://ip:9984/api/v1/statistics/transaction
+* 生成密钥对：http://ip:9984/api/v1//system/key/
 
 ## 启动关闭
 ```
