@@ -52,6 +52,9 @@ def create_bigchain_secondary_index(conn, dbname):
         .index_create('payload_uuid',
                       r.row['block']['transactions']['transaction']['data']['uuid'], multi=True)\
         .run(conn)
+    # add table index buaa
+    r.db(dbname).table('bigchain').index_create('block_transaction_timestamp',
+                                                r.row['block']['transactions']['transaction']['timestamp'], multi=True).run(conn)
 
     # wait for rethinkdb to finish creating secondary indexes
     r.db(dbname).table('bigchain').index_wait().run(conn)

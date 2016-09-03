@@ -63,3 +63,27 @@ class GenesisBlockAlreadyExistsError(Exception):
 
 class CyclicBlockchainError(Exception):
     """Raised when there is a cycle in the blockchain"""
+
+###buaa
+class InvalidPayload(Exception):
+    """Raised when there is an invalid payload"""
+    def __init__(self, value):
+        self.value = value
+
+
+class InvalidTransaction(Exception):
+    """Raised when there is an invalid transaction"""
+
+
+class BalanceNotEnough(Exception):
+    """Raised when sender's account is not enough"""
+
+
+class CurrencyListError(Exception):
+    """Raised when currency list error"""
+
+
+class InvalidAsset(Exception):
+    """Raised when the asset does not exist or it has been destroyed"""
+    def __init__(self, value):
+        self.value = value
