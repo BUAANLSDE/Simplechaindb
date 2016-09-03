@@ -24,6 +24,7 @@ tx = b.create_transaction(b.me, testuser1_pub, None, 'CREATE', payload=payload)
 tx_signed = b.sign_transaction(tx, b.me_private)
 if b.is_valid_transaction(tx_signed):
     b.write_transaction(tx_signed)
+    print(tx_signed)
 
 
 # user B
@@ -44,5 +45,4 @@ tx2 = b.create_transaction(b.me, testuser2_pub, None, 'CREATE', payload=payload2
 tx_signed2 = b.sign_transaction(tx2, b.me_private)
 if b.is_valid_transaction(tx_signed2):
     b.write_transaction(tx_signed2)
-
-
+    print(tx_signed)
