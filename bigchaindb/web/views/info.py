@@ -17,7 +17,7 @@ info_views = Blueprint('info_views', __name__)
 @info_views.route('/')
 def home():
     return flask.jsonify({
-        'software': 'BigchainDB',
+        'software': 'simplechaindb-9.03',
         'version': version.__version__,
         'public_key': bigchaindb.config['keypair']['public'],
         'keyring': bigchaindb.config['keyring'],
