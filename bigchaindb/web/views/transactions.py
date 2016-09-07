@@ -80,11 +80,12 @@ def get_transaction_status(tx_id):
 
     with pool() as bigchain:
         status = bigchain.get_status(tx_id)
+        statusjson = {'status': status}
 
     if not status:
         return make_error(404)
 
-    return {'status': status}
+    return flask.jsonify(**statusjson)
 
 @transaction_views.route('/transactions/', methods=['POST'])
 def create_transaction():
