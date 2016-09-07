@@ -64,7 +64,7 @@ def get_transaction(tx_id):
 
     return flask.jsonify(**tx)
 
-@transaction_views.route('/transactions/tx_id=<tx_id>/status')
+@transaction_views.route('/transactions/status/tx_id=<tx_id>')
 def get_transaction_status(tx_id):
     """API endpoint to get details about the status of a transaction.
 
