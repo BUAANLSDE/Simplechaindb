@@ -131,14 +131,14 @@ def get_transaction_by_uuid(uuid):
     pool = current_app.config['bigchain_pool']
 
     with pool() as bigchain:
-        tx = bigchain.get_tx_by_payload_hash(uuid)
-
+        tx = bigchain.get_tx_by_payload_uuid(uuid)
+        txs = {'tx_list': tx}
     if not tx:
         #abort(404)
         return make_response(get_error_message(
             'Not Found', 'transaction', 'uuid=' + uuid))
 
-    return flask.jsonify(**tx)
+    return flask.jsonify(**txs)
 
 
 @transaction_views.route('/transactions/public_key=<public_key>')
