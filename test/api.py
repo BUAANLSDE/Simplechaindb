@@ -4,7 +4,7 @@ __author__ = 'PC-LiNing'
 import json
 import requests
 
-get_transaction='http://10.2.4.68:9984/api/v1/transactions/'
+get_transaction='http://10.2.1.22:9984/api/v1/transactions/'
 tx_id='16cd78bc53fc64c2bcbe8e991da1b88f57ba852c62734bcd9ea9e65b55cf75a9'
 
 # get detail of a transaction
@@ -30,7 +30,7 @@ values = """
                     },
                 "uri": "cc:4:20:ArdzNIYG9bOxt0GLV97gfY5GSlrCC6oLiCOzZQ_PQOk:96"
             },
-        "new_owners": [
+        "owners_after": [
           "Bc4TEit6zNLvxnxmUqSGYTdx5T1aMifrT5dK2AiD9Lk"
         ]
       }
@@ -43,7 +43,7 @@ values = """
     },
     "fulfillments": [
       {
-        "current_owners": [
+        "owners_before": [
           "GcxoTqtGPTEcRguvwABHtJ6DVEBPoetBCPgi6Tw6zrDd"
         ],
         "fid": 0,
