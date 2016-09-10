@@ -58,5 +58,4 @@ class ChangeFeed(Node):
             elif is_delete and (self.operation & ChangeFeed.DELETE):
                 self.outqueue.put(change['old_val'])
             elif is_update and (self.operation & ChangeFeed.UPDATE):
-                self.outqueue.put(change)
-
+                self.outqueue.put(change['new_val'])

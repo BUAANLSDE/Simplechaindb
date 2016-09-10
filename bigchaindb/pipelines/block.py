@@ -130,7 +130,8 @@ def initial():
 def get_changefeed():
     """Create and return the changefeed for the backlog."""
 
-    return ChangeFeed('backlog', ChangeFeed.INSERT, prefeed=initial())
+    return ChangeFeed('backlog', ChangeFeed.INSERT | ChangeFeed.UPDATE,
+                      prefeed=initial())
 
 
 def create_pipeline():
@@ -157,4 +158,3 @@ def start():
     pipeline.setup(indata=get_changefeed())
     pipeline.start()
     return pipeline
-
