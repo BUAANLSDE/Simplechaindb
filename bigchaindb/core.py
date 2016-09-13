@@ -816,11 +816,11 @@ class Bigchain(object):
             list: list of `txids` currently owned by `owner`
         """
 
-        # get all transactions in which owner is in the `new_owners` list
+        # get all transactions in which owner is in the `owners_after` list
         response = r.table('bigchain') \
             .concat_map(lambda doc: doc['block']['transactions']) \
             .filter(lambda tx: tx['transaction']['conditions']
-                    .contains(lambda c: c['new_owners']
+                    .contains(lambda c: c['owners_after']
                               .contains(owner))) \
             .order_by(index=r.asc('block_transaction_timestamp')) \
             .run(self.conn)
@@ -837,12 +837,12 @@ class Bigchain(object):
             # to get a list of outputs available to spend
             for condition in tx['transaction']['conditions']:
                 # for simple signature conditions there are no subfulfillments
-                # check if the owner is in the condition `new_owners`
-                if len(condition['new_owners']) == 1:
+                # check if the owner is in the condition `owners_after`
+                if len(condition['owners_after']) == 1:
                     if condition['condition']['details']['public_key'] == owner:
                         tx_input = {'txid': tx['id'], 'cid': condition['cid']}
                 else:
-                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # for transactions with multiple `owners_after` there will be several subfulfillments nested
                     # in the condition. We need to iterate the subfulfillments to make sure there is a
                     # subfulfillment for `owner`
                     if util.condition_details_has_owner(condition['condition']['details'], owner):
@@ -854,11 +854,11 @@ class Bigchain(object):
         return owned
 
     def get_bigchain_currency_ids(self, owner):
-        # get all transactions in which owner is in the `new_owners` list
+        # get all transactions in which owner is in the `owners_after` list
         response = r.table('bigchain') \
             .concat_map(lambda doc: doc['block']['transactions']) \
             .filter(lambda tx: tx['transaction']['conditions']
-                    .contains(lambda c: c['new_owners']
+                    .contains(lambda c: c['owners_after']
                               .contains(owner))) \
             .run(self.conn)
         owned = []
@@ -874,13 +874,13 @@ class Bigchain(object):
             # to get a list of outputs available to spend
             for condition in tx['transaction']['conditions']:
                 # for simple signature conditions there are no subfulfillments
-                # check if the owner is in the condition `new_owners`
-                if len(condition['new_owners']) == 1:
+                # check if the owner is in the condition `owners_after`
+                if len(condition['owners_after']) == 1:
                     if condition['condition']['details']['public_key'] == owner:
                         tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
                             ['payload']['previous']}
                 else:
-                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # for transactions with multiple `owners_after` there will be several subfulfillments nested
                     # in the condition. We need to iterate the subfulfillments to make sure there is a
                     # subfulfillment for `owner`
                     if util.condition_details_has_owner(condition['condition']['details'], owner):
@@ -906,10 +906,10 @@ class Bigchain(object):
             }
         """
 
-        # get all transactions in which owner is in the `new_owners` list
+        # get all transactions in which owner is in the `owners_after` list
         response = r.table('backlog') \
             .filter(lambda tx: tx['transaction']['conditions']
-                    .contains(lambda c: c['new_owners']
+                    .contains(lambda c: c['owners_after']
                               .contains(owner))) \
             .run(self.conn)
         owned = []
@@ -919,13 +919,13 @@ class Bigchain(object):
             # to get a list of outputs available to spend
             for condition in tx['transaction']['conditions']:
                 # for simple signature conditions there are no subfulfillments
-                # check if the owner is in the condition `new_owners`
-                if len(condition['new_owners']) == 1:
+                # check if the owner is in the condition `owners_after`
+                if len(condition['owners_after']) == 1:
                     if condition['condition']['details']['public_key'] == owner:
                         tx_input = {'txid': tx['id'], 'cid': condition['cid'],'previous':tx['transaction']['data'] \
                             ['payload']['previous']}
                 else:
-                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # for transactions with multiple `owners_after` there will be several subfulfillments nested
                     # in the condition. We need to iterate the subfulfillments to make sure there is a
                     # subfulfillment for `owner`
                     if util.condition_details_has_owner(condition['condition']['details'], owner):
@@ -1067,9 +1067,9 @@ class Bigchain(object):
                 response = self.write_transaction(transaction_signed)
                 return response
             else:
-                raise exceptions.InvalidAsset('Invalid Asset')
+                return {'405':'Invalid asset'}
         else:
-            raise exceptions.InvalidPayload('Invalid Payload')
+            return {'405':'Invalid payload'}
 
 
     def get_tx_list_by_asset(self,asset):
@@ -1114,7 +1114,7 @@ class Bigchain(object):
             rtx = tool.sort_asset_tx_by_timestamp(rtx)
             response = rtx.popleft()
 
-            for owner in response['transaction']['conditions'][0]['new_owners']:
+            for owner in response['transaction']['conditions'][0]['owners_after']:
                 if owner in (self.nodes_except_me + [self.me]):
                     # Exception
                     raise exceptions.InvalidAsset('The Asset does not exist')
@@ -1135,7 +1135,7 @@ class Bigchain(object):
         """
         tx=self.get_last_tx_by_asset(asset)
         if tx is not None:
-            return tx['transaction']['conditions'][0]['new_owners']
+            return tx['transaction']['conditions'][0]['owners_after']
         else:
             return None
 
@@ -1196,12 +1196,12 @@ class Bigchain(object):
         # to get a list of outputs available to spend
         for condition in tx['transaction']['conditions']:
             # for simple signature conditions there are no subfulfillments
-            # check if the owner is in the condition `new_owners`
-            if len(condition['new_owners']) == 1:
+            # check if the owner is in the condition `owners_after`
+            if len(condition['owners_after']) == 1:
                 if condition['condition']['details']['public_key'] == owner:
                     tx_input = {'txid': tx['id'], 'cid': condition['cid']}
                 else:
-                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # for transactions with multiple `owners_after` there will be several subfulfillments nested
                     # in the condition. We need to iterate the subfulfillments to make sure there is a
                     # subfulfillment for `owner`
                     if util.condition_details_has_owner(condition['condition']['details'], owner):
@@ -1251,11 +1251,11 @@ class Bigchain(object):
                 ...
             ]
         """
-        # get all transactions in which owner is in the `new_owners` list
+        # get all transactions in which owner is in the `owners_after` list
         response = r.table('bigchain') \
             .concat_map(lambda doc: doc['block']['transactions']) \
             .filter(lambda tx: tx['transaction']['conditions']
-                    .contains(lambda c: c['new_owners']
+                    .contains(lambda c: c['owners_after']
                               .contains(owner))) \
             .run(self.conn)
         owned = []
@@ -1271,12 +1271,12 @@ class Bigchain(object):
             # to get a list of outputs available to spend
             for condition in tx['transaction']['conditions']:
                 # for simple signature conditions there are no subfulfillments
-                # check if the owner is in the condition `new_owners`
-                if len(condition['new_owners']) == 1:
+                # check if the owner is in the condition `owners_after`
+                if len(condition['owners_after']) == 1:
                     if condition['condition']['details']['public_key'] == owner:
                         tx_input = {'txid': tx['id'],'payload':tx['transaction']['data']['payload'],'timestamp':tx['transaction']['timestamp']}
                 else:
-                    # for transactions with multiple `new_owners` there will be several subfulfillments nested
+                    # for transactions with multiple `owners_after` there will be several subfulfillments nested
                     # in the condition. We need to iterate the subfulfillments to make sure there is a
                     # subfulfillment for `owner`
                     if util.condition_details_has_owner(condition['condition']['details'], owner):
@@ -1302,12 +1302,12 @@ class Bigchain(object):
             response1 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['conditions']
-                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_after'].contains(public_key))).count().run(self.conn)
 
             response2 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['fulfillments']
-                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_before'].contains(public_key))).count().run(self.conn)
 
             response = response1 + response2
 
@@ -1330,13 +1330,13 @@ class Bigchain(object):
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "currency") \
                 .filter(lambda tx: tx['transaction']['conditions']
-                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_after'].contains(public_key))).count().run(self.conn)
 
             response2 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "currency") \
                 .filter(lambda tx: tx['transaction']['fulfillments']
-                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_before'].contains(public_key))).count().run(self.conn)
 
             response = response1 + response2
 
@@ -1359,13 +1359,13 @@ class Bigchain(object):
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
                 .filter(lambda tx: tx['transaction']['conditions']
-                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_after'].contains(public_key))).count().run(self.conn)
 
             response2 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
                 .filter(lambda tx: tx['transaction']['fulfillments']
-                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_before'].contains(public_key))).count().run(self.conn)
 
             response = response1 + response2
 
@@ -1387,13 +1387,13 @@ class Bigchain(object):
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "asset") \
                 .filter(lambda tx: tx['transaction']['conditions']
-                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_after'].contains(public_key))).count().run(self.conn)
 
             response2 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['category'] == "asset") \
                 .filter(lambda tx: tx['transaction']['fulfillments']
-                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_before'].contains(public_key))).count().run(self.conn)
 
             response = response1 + response2
 
@@ -1416,13 +1416,13 @@ class Bigchain(object):
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
                 .filter(lambda tx: tx['transaction']['conditions']
-                        .contains(lambda c: c['new_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_after'].contains(public_key))).count().run(self.conn)
 
             response2 = r.table('bigchain') \
                 .concat_map(lambda doc: doc['block']['transactions']) \
                 .filter(lambda tx: tx['transaction']['data']['payload']['issue'] == type) \
                 .filter(lambda tx: tx['transaction']['fulfillments']
-                        .contains(lambda c: c['current_owners'].contains(public_key))).count().run(self.conn)
+                        .contains(lambda c: c['owners_before'].contains(public_key))).count().run(self.conn)
 
             response = response1 + response2
 
