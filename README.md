@@ -2,7 +2,7 @@
 
 based on [BigchainDB](https://github.com/bigchaindb/bigchaindb)
 
-##单节点 Quick Start
+##Quick Start (Single Node)
 A. [Install RethinkDB Server](https://rethinkdb.com/docs/install/ubuntu/)
 
 B. Open a Terminal and run RethinkDB Server with the command:
@@ -22,8 +22,10 @@ sudo apt-get install python3-pip
 sudo pip3 install --upgrade pip setuptools
 ```
 
-E. Install the `bigchaindb` Python package from PyPI:
+E. Install the `simplechaindb` Python package from PyPI:
 ```text
+git clone https://git.oschina.net/buaalining/Simplechaindb.git
+cd Simplechaindb/clusterdeploy
 sudo python3 setup.py install
 ```
 
@@ -33,9 +35,9 @@ simplechaindb -y configure
 simplechaindb start
 ```
 
-##集群
+##For Cluster
 
-### 初次部署
+### Deployment for the first time
 ```
 git clone https://git.oschina.net/buaalining/Simplechaindb.git
 cd Simplechaindb/clusterdeploy
@@ -43,7 +45,7 @@ vim blockchain-node
 ./first_setup.sh $NUM_NODES
 ```
 
-### 更新
+### Deployment for update
 ```
 cd Simplechaindb
 git pull
@@ -51,18 +53,18 @@ cd clusterdeploy
 ./update $NUM_NODES
 ```
 
-### 启动|关闭
+### start or stop of cluster
 ```
 cd clusterdeploy
 ./clustercontrol start|stop
 ```
 
-## 基本API
-* 节点基础信息：http://ip:9984/
-* get_transaction：http://ip:9984/api/v1/transactions/tx_id=<tx_id>
-* ['POST']create_transaction：http://ip:9984/api/v1/transactions/
-* 统计：http://ip:9984/api/v1/statistics/transaction
-* 生成密钥对：http://ip:9984/api/v1//system/key/
+## Basic API
+* ['GET']  node_info:http://ip:9984/
+* ['GET']  get_transaction:http://ip:9984/api/v1/transactions/tx_id=<tx_id>
+* ['POST'] create_transaction:http://ip:9984/api/v1/transactions/
+* ['GET']  statistics:http://ip:9984/api/v1/statistics/transaction
+* ['GET']  generate_key_pair:http://ip:9984/api/v1/system/key/
 
 ## Links for BigchainDB
 * [BigchainDB.com](https://www.bigchaindb.com/) - the main BigchainDB website, including newsletter signup
