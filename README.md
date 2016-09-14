@@ -2,7 +2,7 @@
 
 based on [BigchainDB](https://github.com/bigchaindb/bigchaindb)
 
-##单节点Quick Start
+##单节点 Quick Start
 A. [Install RethinkDB Server](https://rethinkdb.com/docs/install/ubuntu/)
 
 B. Open a Terminal and run RethinkDB Server with the command:
@@ -31,7 +31,7 @@ F. Configure and run BigchainDB:
 ```text
 simplechaindb -y configure
 simplechaindb start
-
+```
 
 ##集群
 
