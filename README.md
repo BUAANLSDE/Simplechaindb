@@ -1,8 +1,41 @@
 #Simplechaindb
 
-based on BigchainDB
+based on [BigchainDB](https://github.com/bigchaindb/bigchaindb)
 
-## 初次安装部署
+##单节点Quick Start
+A. [Install RethinkDB Server](https://rethinkdb.com/docs/install/ubuntu/)
+
+B. Open a Terminal and run RethinkDB Server with the command:
+```text
+rethinkdb
+```
+
+C. Ubuntu 14.04 already has Python 3.4, so you don't need to install it, but you do need to install a couple other things:
+```text
+sudo apt-get update
+sudo apt-get install g++ python3-dev
+```
+
+D. Get the latest version of pip and setuptools:
+```text
+sudo apt-get install python3-pip
+sudo pip3 install --upgrade pip setuptools
+```
+
+E. Install the `bigchaindb` Python package from PyPI:
+```text
+sudo python3 setup.py install
+```
+
+F. Configure and run BigchainDB:
+```text
+simplechaindb -y configure
+simplechaindb start
+
+
+##集群
+
+### 初次部署
 ```
 git clone https://git.oschina.net/buaalining/Simplechaindb.git
 cd Simplechaindb/clusterdeploy
@@ -10,13 +43,20 @@ vim blockchain-node
 ./first_setup.sh $NUM_NODES
 ```
 
-## 更新
+### 更新
 ```
 cd Simplechaindb
 git pull
 cd clusterdeploy
 ./update $NUM_NODES
 ```
+
+### 启动|关闭
+```
+cd clusterdeploy
+./clustercontrol start|stop
+```
+
 ## 基本API
 * 节点基础信息：http://ip:9984/
 * get_transaction：http://ip:9984/api/v1/transactions/tx_id=<tx_id>
@@ -24,30 +64,5 @@ cd clusterdeploy
 * 统计：http://ip:9984/api/v1/statistics/transaction
 * 生成密钥对：http://ip:9984/api/v1//system/key/
 
-## 启动关闭
-```
-cd clusterdeploy
-./clustercontrol start|stop
-```
-
-
 ## Links for BigchainDB
 * [BigchainDB.com](https://www.bigchaindb.com/) - the main BigchainDB website, including newsletter signup
-* [Whitepaper](https://www.bigchaindb.com/whitepaper/) - outlines the motivations, goals and core algorithms of BigchainDB
-* [Roadmap](https://github.com/bigchaindb/org/blob/master/ROADMAP.md)
-* [Blog](https://medium.com/the-bigchaindb-blog)
-* [Twitter](https://twitter.com/BigchainDB)
-* [Google Group](https://groups.google.com/forum/#!forum/bigchaindb)
-
-## Links for Developers
-* [Documentation](http://bigchaindb.readthedocs.io/en/latest/) - for developers
-* [CONTRIBUTING.md](CONTRIBUTING.md) - how to contribute
-* [Community guidelines](CODE_OF_CONDUCT.md)
-* [Open issues](https://github.com/bigchaindb/bigchaindb/issues)
-* [Open pull requests](https://github.com/bigchaindb/bigchaindb/pulls)
-* [Gitter chatroom](https://gitter.im/bigchaindb/bigchaindb)
-
-## Legal
-* [Licenses](LICENSES.md) - open source & open content
-* [Imprint](https://www.bigchaindb.com/imprint/)
-* [Contact Us](https://www.bigchaindb.com/contact/)
