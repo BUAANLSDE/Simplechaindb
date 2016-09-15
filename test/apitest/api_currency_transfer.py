@@ -1,7 +1,7 @@
-__author__ = 'PC-LiNing'
-
+import json
 import requests
-from flask import json
+
+url='http://10.2.1.22:9984/api/v1/accounts/transfer/'
 
 values={
             "sender_public_key":"wreXXdHnbZmpyNxTCBscdtNMutF1VhL7v5n9zc9gyi2",
@@ -17,7 +17,11 @@ values={
                     "previous":'',
                     "trader":''
                    }
-            }
-headers = {'content-type': 'application/json',"Accept": "application/json"}
-r = requests.post('http://10.2.1.22:9984/api/v1/accounts/transfer/',json.dumps(values),headers)
+         }
+
+headers = {
+  'content-type': 'application/json',"Accept": "application/json"
+}
+
+r=requests.post(url,data=json.dumps(values),headers=headers)
 print(r.text)
