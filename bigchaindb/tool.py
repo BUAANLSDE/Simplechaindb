@@ -214,8 +214,8 @@ def get_asset_records(asset_queue):
     """get asset records from asset queue
        record format:
        {
-            "original_owner":original owner,
-            "current_owner":current owner,
+            "owners_before":owners_before,
+            "owners_after":owners_after,
             "time":time
        }
     """
@@ -223,8 +223,8 @@ def get_asset_records(asset_queue):
     while asset_queue is not None and len(asset_queue) > 0 :
         item=asset_queue.pop()
         record={
-            "original_owner":item['transaction']['fulfillments'][0]['current_owners'],
-            "current_owner":item['transaction']['conditions'][0]['new_owners'],
+            "owners_before":item['transaction']['fulfillments'][0]['owners_before'],
+            "owners_after":item['transaction']['conditions'][0]['owners_after'],
             "time":get_Timefrom_Timestamp(int(item['transaction']['timestamp']))
         }
         records.append(record)

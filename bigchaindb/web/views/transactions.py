@@ -284,8 +284,8 @@ def get_circulation_of_asset(asset_hash):
                 "asset":asset_hash,
                 "circulation_record":[
                     {
-                        "original_owner":original owner,
-                        "current_owner":current owner,
+                        "owners_before":owners_before,
+                        "owners_after":owners_after,
                         "time":time
                     },
                     ...
