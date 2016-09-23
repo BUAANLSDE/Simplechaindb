@@ -11,3 +11,4 @@ based on [BigchainDB](https://github.com/bigchaindb/bigchaindb)
 ## Links
 * [showdoc](http://www.showdoc.cc/simplechaindb) - Documentation for developers
 * [BigchainDB.com](https://www.bigchaindb.com/) - the main BigchainDB website, including newsletter signup
+* [AntColony](http://git.oschina.net/buaalining/AntColony) - the recovery tool for Simplechaindb .
