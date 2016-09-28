@@ -16,12 +16,25 @@ config = {
     'encoding':'utf-8'
 }
 
+#singleton localdb pool
+class LocalDBPool(object):
+
+    conn = dict()
+    conn['header'] = l.DB(config['database']['path']+'header/',create_if_missing=True)
+    conn['bigchain'] = l.DB(config['database']['path']+'bigchain/',create_if_missing=True)
+    conn['votes'] = l.DB(config['database']['path']+'votes/',create_if_missing=True)
+
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(LocalDBPool, cls).__new__(cls)
+            logger.info('init localpool ...')
+        return cls.instance
+
 def init():
     """ init leveldb database by conn"""
     logger.info('leveldb init...')
-    conn_bigchain = create_database('bigchain')
-    create_database('votes')
-    conn_header = create_database('header')
+    conn_bigchain = get_conn('bigchain')
+    conn_header = get_conn('header')
 
     logger.info('leveldb init...')
     logger.info('leveldb/header init...')
@@ -29,22 +42,21 @@ def init():
     logger.info('leveldb/header init public_key...' + str(bigchaindb.config['keypair']['public']))
     logger.info('leveldb/header init private_key...' + str(bigchaindb.config['keypair']['private']))
 
-    if conn_header is None or conn_header.closed:
-        conn_header = get_conn('header')
-
     update(conn_header, 'host', bigchaindb.config['database']['host'])
     update(conn_header, 'public_key', bigchaindb.config['keypair']['public'])
     update(conn_header, 'private_key', bigchaindb.config['keypair']['private'])
 
     block_num = int(get_withdefault(conn_header, 'block_num', 0))
+    genesis_block_id = get_withdefault(conn_header,'genesis_block_id','0')
     if block_num == 0 :
         genesis_block = r.db('bigchain').table('bigchain').order_by(r.asc(r.row['block']['timestamp'])).limit(1).run(
             bigchaindb.Bigchain().conn)[0]
         genesis_block_id = genesis_block['id']
         insert(conn_bigchain, genesis_block_id, genesis_block)
+        insert(conn_header, 'genesis_block_id', genesis_block_id)
         insert(conn_header, 'block_num', 1)
         insert(conn_header, 'current_block_id', genesis_block_id)
-
+    logger.info('leveldb/header genesis_block_id...' + str(genesis_block_id))
     logger.info('leveldb init done')
 
 
@@ -63,56 +75,51 @@ def destroy():
     logger.info('leveldb destroy...')
 
 
-def close():
-    """ close all databases dir """
-    tables = config['database']['tables']
-    logger.info('leveldb close all databases '+str(tables))
-    for table in tables:
-        if table is not None:
-            try:
-                conn = get_conn(table)
-                close_database(conn)
-                # print('close ' +table + ' successfully')
-            except:
-                # print(table + ' is not exist')
-                continue
-    logger.info('leveldb close...')
+# def close():
+#     """ close all databases dir """
+#     tables = config['database']['tables']
+#     logger.info('leveldb close all databases '+str(tables))
+#     for table in tables:
+#         if table is not None:
+#             try:
+#                 conn = get_conn(table)
+#                 close_database(conn)
+#                 # print('close ' +table + ' successfully')
+#             except:
+#                 # print(table + ' is not exist')
+#                 continue
+#     logger.info('leveldb close...')
 
 
-def get_conn(name,path=config['database']['path']):
+def get_conn(name):
     """ get the leveldb """
-    return l.DB(path+name+'/')
+    return LocalDBPool.conn[name]
 
 
-def create_database(name,path=config['database']['path']):
-    """ create leveldb database if missing"""
-    if name is None:
-        raise  l.Error('database name can`t None!')
-    operation = 'open'
-    conn = None
-    try:
-        conn = get_conn(name)
-    except  Exception as create_database_except:
-        operation = 'create'
-        # dir = path + name + '/'
-        # isExists =  os.path.exists(path)
-        # not exist ,create
-        # if not isExists:
-        #     try:
-        #         os.makedirs(path)
-        #     except Exception as create_leveldb_error:
-        #         raise  create_leveldb_error
-        conn = l.DB(path + name + '/', create_if_missing=True)
-    finally:
-        # logger.info('dir:' + str(dir) + ',isExists:'+str(create_leveldb_error))
-        logger.info('leveldb ' + operation + ' dir '+ name + ',position: ' + path + name + '/')
-        return conn
+# def create_database(name, path=config['database']['path']):
+#     """ create leveldb database if missing"""
+#     logging.info('create_database: ' + str(name))
+#     if name is None:
+#         raise l.Error('database name can`t None!')
+#     operation = 'open'
+#     conn = None
+#     try:
+#         conn = LocalDBPool.conn(name)
+#         if conn is None:
+#             operation = 'create'
+#             conn = l.DB(path + name + '/', create_if_missing=True)
+#     except  Exception as create_database_except:
+#         operation = 'create'
+#         conn = l.DB(path + name + '/', create_if_missing=True)
+#     finally:
+#         logger.info('leveldb ' + operation + ' dir ' + name + ',position: ' + path + name + '/')
+#         return conn
 
 
-def close_database(conn):
-    """ close leveldb database by conn"""
-    logger.info('leveldb close...')
-    del conn
+# def close_database(conn):
+#     """ close leveldb database by conn"""
+#     logger.info('leveldb close...')
+#     del conn
 
 
 def insert(conn,key,value):
