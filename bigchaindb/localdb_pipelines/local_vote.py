@@ -4,8 +4,9 @@ This module  takes care of all the changes for bigchain and votes.
 
 import logging
 from multipipes import Pipeline, Node
-from bigchaindb.localdb_pipelines.utils import ChangeFeed
+from bigchaindb.localdb_pipelines.utils import LocalChangeFeed
 
+# from bigchaindb.pipelines.utils import ChangeFeed
 logger = logging.getLogger(__name__)
 
 
@@ -24,18 +25,10 @@ class LocalVote(Node):
         pass
 
 
-    def set_votes_queue(self,block):
-        self.votes_queue.put(block)
-
-
-    def get_votes_queue(self):
-        return self.votes_queue
-
-
 def create_pipeline():
     localVote = LocalVote()
-    localVote__pipeline = Pipeline([])
-    return localVote__pipeline
+    localVote_pipeline = Pipeline([])
+    return localVote_pipeline
 
 
 def initial():
@@ -43,7 +36,7 @@ def initial():
 
 def get_changefeed():
     """Create and return the changefeed for the votes."""
-    return ChangeFeed('votes',ChangeFeed.INSERT | ChangeFeed.UPDATE,prefeed=initial())
+    return LocalChangeFeed('votes',LocalChangeFeed.INSERT | LocalChangeFeed.UPDATE,prefeed=initial())
 
 
 def start():

@@ -6,13 +6,14 @@ from multipipes import Node
 
 from bigchaindb import Bigchain
 import bigchaindb.localdb.utils as leveldb
-import bigchaindb.localdb_pipelines.local_global as lg
-
+from bigchaindb.localdb_pipelines.async_queue import DealQueue
+from bigchaindb.localdb_pipelines.local_deal import LocalDeal
+import bigchaindb.localdb_pipelines.task_queue as task
 import logging
 
 logger = logging.getLogger(__name__)
 
-class ChangeFeed(Node):
+class LocalChangeFeed(Node):
 
     INSERT = 1
     DELETE = 2
@@ -30,12 +31,15 @@ class ChangeFeed(Node):
             prefeed (iterable): whatever set of data you want to be published
                 first.
         """
-
-        super().__init__(name='local_changefeed')
+        super().__init__(name='localchangefeed')
         self.prefeed = prefeed if prefeed else []
         self.table = table
         self.operation = operation
         self.bigchain = Bigchain()
+        self.deal_queue = DealQueue()
+        self.conn_header = leveldb.get_conn('header')
+        self.conn_bigchain = leveldb.get_conn('bigchain')
+        self.conn_votes = leveldb.get_conn('votes')
 
     def run_forever(self):
         for element in self.prefeed:
@@ -48,50 +52,54 @@ class ChangeFeed(Node):
             is_delete = change['new_val'] is None
             is_update = not is_insert and not is_delete
 
-            if is_insert and (self.operation & ChangeFeed.INSERT):
+            if is_insert and (self.operation & LocalChangeFeed.INSERT):
                 #TODO new block enqueue wx
                 if self.table == 'bigchain':
-                    lg.async_blocks_queue(self.deal_block(change['new_val']),None)
+                    block = change['new_val']
+                    # task.async_blocks_queue(self.deal_block,task.handle_result,block)
+                    self.deal_queue.add_block(block)
+                    logger.info('address ... ' + str(self.deal_queue))
+                    # self.deal_queue.get_blocks_queue()
+                    # self.deal_block(block)
                 elif self.table == 'votes':
-                    lg.async_votes_queue(self.deal_vote(change['new_val']), None)
-                    #no pipe process ,no outqueue
-                    # self.outqueue.put(change['new_val'])
-            elif is_delete and (self.operation & ChangeFeed.DELETE):
+                    vote = change['new_val']
+                    # task.async_votes_queue(self.deal_vote,task.handle_result,vote)
+                    self.deal_queue.add_vote(vote)
+                    # self.deal_queue.get_votes_queue()
+                    # self.deal_vote(vote)
+            elif is_delete and (self.operation & LocalChangeFeed.DELETE):
                 pass
                 # self.outqueue.put(change['old_val'])
-            elif is_update and (self.operation & ChangeFeed.UPDATE):
+            elif is_update and (self.operation & LocalChangeFeed.UPDATE):
                 pass
                 # self.outqueue.put(change['new_val'])
 
-    def deal_block(self, block):
-        conn_header = leveldb.get_conn('header')
-        conn_bigchain = leveldb.get_conn('bigchain')
-        block_id = block['id']
-        leveldb.insert(conn_bigchain, block_id, block)
-        block_num = leveldb.get(conn_header, 'block_num')
-        block_num = int(block_num)
-        block_num = block_num + 1
-
-        leveldb.update(conn_header, 'block_num', block_num)
-        leveldb.update(conn_header, 'current_block_id', block_id)
-        # self.get_base_info(conn_header,conn_bigchain)
-
-    def deal_vote(self, vote):
-        conn_votes = leveldb.get_conn('votes')
-        previous_block = vote['vote']['previous_block']
-        node_pubkey = vote['node_pubkey']
-        vote_key = previous_block + '-' + node_pubkey
-        # logger.info('vote_key:\n' + str(vote_key))
-        leveldb.insert(conn_votes, vote_key, vote)
-        # self.get_votes_for_block(conn_votes,previous_block)
-
-    def get_base_info(self,conn_header,conn_bigchain):
-        current_bid = leveldb.get(conn_header,'current_block_id')
-        logger.info('block_num: ' + str(leveldb.get(conn_header,'block_num')) + ',\ncurrent_block_id ' +
-                    current_bid)
-        # logger.info('current_block: ' + str(leveldb.get(conn_bigchain,current_bid)))
-
-
-    def get_votes_for_block(self,conn_votes,block_id):
-        votess = leveldb.get_prefix(conn_votes,block_id+'-')
-        # logger.iinfo(str(block_id) + ' votes :\n' + str(votess))
+    # def deal_block(self, block):
+    #     logger.info('deal block task...')
+    #     block_id = block['id']
+    #     leveldb.insert(self.conn_bigchain, block_id, block)
+    #     block_num = leveldb.get(self.conn_header, 'block_num')
+    #     block_num = int(block_num)
+    #     block_num = block_num + 1
+    #     leveldb.update(self.conn_header, 'block_num', block_num)
+    #     leveldb.update(self.conn_header, 'current_block_id', block_id)
+    #     self.get_base_info(self.conn_header,self.conn_bigchain)
+    #
+    #
+    # def deal_vote(self, vote):
+    #     logger.info('deal vote task...')
+    #     previous_block = vote['vote']['previous_block']
+    #     node_pubkey = vote['node_pubkey']
+    #     vote_key = previous_block + '-' + node_pubkey
+    #     leveldb.insert(self.conn_votes, vote_key, vote)
+    #
+    # def get_base_info(self,conn_header,conn_bigchain):
+    #     current_bid = leveldb.get(conn_header,'current_block_id')
+    #     logger.info('block_num: ' + str(leveldb.get(conn_header,'block_num')) + ',\ncurrent_block_id ' +
+    #                 current_bid)
+    #     # logger.info('current_block: ' + str(leveldb.get(conn_bigchain,current_bid)))
+    #
+    #
+    # def get_votes_for_block(self,conn_votes,block_id):
+    #     votess = leveldb.get_prefix(conn_votes,block_id+'-')
+    #     # logger.iinfo(str(block_id) + ' votes :\n' + str(votess))
