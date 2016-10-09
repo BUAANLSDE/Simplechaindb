@@ -2,9 +2,10 @@
 # bytes can only contain ASCII literal characters.
 
 import plyvel as l
-import logging
 import rethinkdb as r
 import bigchaindb
+
+import logging
 logger = logging.getLogger(__name__)
 
 # path should be exist
@@ -75,51 +76,9 @@ def destroy():
     logger.info('leveldb destroy...')
 
 
-# def close():
-#     """ close all databases dir """
-#     tables = config['database']['tables']
-#     logger.info('leveldb close all databases '+str(tables))
-#     for table in tables:
-#         if table is not None:
-#             try:
-#                 conn = get_conn(table)
-#                 close_database(conn)
-#                 # print('close ' +table + ' successfully')
-#             except:
-#                 # print(table + ' is not exist')
-#                 continue
-#     logger.info('leveldb close...')
-
-
 def get_conn(name):
     """ get the leveldb """
     return LocalDBPool.conn[name]
-
-
-# def create_database(name, path=config['database']['path']):
-#     """ create leveldb database if missing"""
-#     logging.info('create_database: ' + str(name))
-#     if name is None:
-#         raise l.Error('database name can`t None!')
-#     operation = 'open'
-#     conn = None
-#     try:
-#         conn = LocalDBPool.conn(name)
-#         if conn is None:
-#             operation = 'create'
-#             conn = l.DB(path + name + '/', create_if_missing=True)
-#     except  Exception as create_database_except:
-#         operation = 'create'
-#         conn = l.DB(path + name + '/', create_if_missing=True)
-#     finally:
-#         logger.info('leveldb ' + operation + ' dir ' + name + ',position: ' + path + name + '/')
-#         return conn
-
-
-# def close_database(conn):
-#     """ close leveldb database by conn"""
-#     logger.info('leveldb close...')
-#     del conn
 
 
 def insert(conn,key,value):

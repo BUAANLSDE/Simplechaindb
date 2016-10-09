@@ -5,7 +5,8 @@ import bigchaindb
 from bigchaindb.pipelines import vote, block, election, stale
 from bigchaindb.web import server
 
-from bigchaindb.localdb_pipelines import local_block,local_vote,local_deal
+from localdb.pipelines import local_block,local_vote,receive
+import localdb.leveldb.utils as leveldb
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,9 @@ def start():
     logger.info('Initializing BigchainDB...')
 
     # init localdb with localdb utils
-    # logger.info('start localdb pipeline...')
-    # local_deal.start()
-    # local_block.start()
-    # local_vote.start()
+    logger.info('start localdb pipeline...')
+    local_block.start()
+    local_vote.start()
 
     # start the processes
     logger.info('Starting block')
@@ -51,3 +51,8 @@ def start():
 
     # start message
     logger.info(BANNER.format(bigchaindb.config['server']['bind']))
+
+    # RabbitMQ receive
+    logger.info('localdb init &  begin receive tables change...')
+    leveldb.init()
+    receive.start()

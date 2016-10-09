@@ -2,13 +2,12 @@
 This module  takes care of all the changes for bigchain and votes.
 """
 
-import logging
 from multipipes import Pipeline, Node
-from bigchaindb.localdb_pipelines.utils import LocalChangeFeed
+from localdb.pipelines.utils import LocalChangeFeed
 
-# from bigchaindb.pipelines.utils import ChangeFeed
+import logging
+
 logger = logging.getLogger(__name__)
-
 
 class LocalVote(Node):
     """This class monitor the change for votes.

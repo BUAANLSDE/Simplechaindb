@@ -62,6 +62,23 @@ def install_base_software():
         sudo('pip3 install --upgrade pip')
         sudo('pip3 --version')
 
+# Install localdb
+@task
+@parallel
+def install_localdb():
+    #leveldb & plyvel install
+    sudo(" echo 'leveldb & plyvel install' ")
+    sudo('pip3 install leveldb')
+    sudo('apt-get install libleveldb1 libleveldb-dev libsnappy1 libsnappy-dev')
+    sudo('apt-get -y -f install')
+    sudo('pip3 install plyvel')
+
+    # ramq & pika install
+    sudo(" echo 'ramq & pika install' ")
+    sudo('apt-get -y install rabbitmq-server')
+    sudo('pip3 install pika')
+
+
 
 # Install RethinkDB
 @task
