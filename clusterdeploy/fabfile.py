@@ -14,7 +14,7 @@ from fabric.contrib.files import sed
 from fabric.operations import run, put
 from fabric.context_managers import settings
 
-from hostlist import public_dns_names
+from clusterdeploy.hostlist import public_dns_names
 
 public_hosts = []
 public_pwds = []
@@ -64,19 +64,20 @@ def install_base_software():
 
 # Install localdb
 @task
-@parallel
 def install_localdb():
-    #leveldb & plyvel install
-    sudo(" echo 'leveldb & plyvel install' ")
-    sudo('pip3 install leveldb')
-    sudo('apt-get install libleveldb1 libleveldb-dev libsnappy1 libsnappy-dev')
-    sudo('apt-get -y -f install')
-    sudo('pip3 install plyvel')
+    # leveldb & plyvel install
+    with settings(warn_only=True):
+        sudo(" echo 'leveldb & plyvel install' ")
+        sudo("mkdir -p /data/leveldb")
+        sudo('pip3 install leveldb')
+        sudo('apt-get install libleveldb1 libleveldb-dev libsnappy1 libsnappy-dev')
+        sudo('apt-get -y -f install')
+        sudo('pip3 install plyvel')
 
-    # ramq & pika install
-    sudo(" echo 'ramq & pika install' ")
-    sudo('apt-get -y install rabbitmq-server')
-    sudo('pip3 install pika')
+        # ramq & pika install
+        sudo(" echo 'ramq & pika install' ")
+        sudo('apt-get -y install rabbitmq-server')
+        sudo('pip3 install pika')
 
 
 
@@ -104,7 +105,7 @@ def confiure_rethinkdb():
         # copy config file to target system
         put('conf/rethinkdb.conf',
             '/etc/rethinkdb/instances.d/default.conf',
-            mode=0600,
+            mode=0x0600,
             use_sudo=True)
         # finally restart instance
         sudo('/etc/init.d/rethinkdb restart')
