@@ -14,7 +14,7 @@ from fabric.contrib.files import sed
 from fabric.operations import run, put
 from fabric.context_managers import settings
 
-from clusterdeploy.hostlist import public_dns_names
+#from hostlist import public_dns_names
 
 public_hosts = []
 public_pwds = []
@@ -59,6 +59,7 @@ def install_base_software():
         sudo('dpkg --configure -a')
         sudo('apt-get -y -f install')
         sudo('apt-get -y install git gcc g++ python3-dev python3-setuptools python3-pip ntp screen')
+        sudo('pip3 install --upgrade setuptools')
         sudo('pip3 install --upgrade pip')
         sudo('pip3 --version')
 
@@ -117,6 +118,7 @@ def confiure_rethinkdb():
 def install_bigchaindb_from_git_archive():
     put('bigchaindb-archive.tar.gz')
     run('tar xvfz bigchaindb-archive.tar.gz')
+    sudo('pip3 install  --upgrade setuptools')
     sudo('pip3 install . --upgrade')
     # sudo('python3 setup.py install')
     run('rm bigchaindb-archive.tar.gz')
