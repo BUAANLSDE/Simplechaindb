@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # path should be exist
 config = {
     'database': {
-        'path': '/data/leveldb/',
+        'path': '/localdb/',
         'tables':['header','bigchain','votes']
     },
     'encoding':'utf-8'
@@ -24,12 +24,17 @@ config = {
 class LocalDBPool(object):
     # tips: first should release the leveldb dir block
     parent_dir = config['database']['path']
+    if parent_dir and not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+
     for table in config['database']['tables']:
         try:
-            os.remove(parent_dir + table + "//LOCK")
+            lock_path = parent_dir + table + "//LOCK"
+            if(os.path.exists(lock_path)):
+                os.remove(lock_path)
         except Exception as ex:
-            logger.warn(str(ex))
-            # continue
+            # logger.warn(str(ex))
+            continue
 
     conn = dict()
     conn['header'] = l.DB(parent_dir+'header/',create_if_missing=True)

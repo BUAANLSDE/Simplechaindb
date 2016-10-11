@@ -70,8 +70,8 @@ def install_localdb():
     with settings(warn_only=True):
         user_group = env.user
         sudo(" echo 'leveldb & plyvel install' ")
-        sudo("mkdir -p /data/leveldb")
-        sudo("chown -R " + user_group + ':' + user_group + ' /data/leveldb')
+        sudo("mkdir -p /localdb/{bigchian,votes,header}")
+        sudo("chown -R " + user_group + ':' + user_group + ' /localdb')
         sudo('pip3 install leveldb')
         sudo('apt-get install libleveldb1 libleveldb-dev libsnappy1 libsnappy-dev')
         sudo('apt-get -y -f install')
@@ -90,14 +90,14 @@ def install_localdb():
 def install_rethinkdb():
     """Installation of RethinkDB"""
     with settings(warn_only=True):
-        sudo("mkdir -p /data/rethinkdb")
+        sudo("mkdir -p /data")
         # install rethinkdb
         sudo("echo 'deb http://download.rethinkdb.com/apt trusty main' | sudo tee /etc/apt/sources.list.d/rethinkdb.list")
         sudo("wget -qO- http://download.rethinkdb.com/apt/pubkey.gpg | sudo apt-key add -")
         sudo("apt-get update")
         sudo("apt-get -y install rethinkdb")
         # initialize data-dir
-        sudo('rm -rf /data/rethinkdb/*')
+        sudo('rm -rf /data/*')
 
 # Configure RethinkDB
 @task
@@ -192,7 +192,7 @@ def stop_bigchaindb():
 @task
 @parallel
 def start_bigchaindb_load():
-    sudo('screen -d -m simplechaindb load &', pty=False,user=env.user)
+    sudo('screen -d -m simplechaindb load &', pty=False)
 
 # rethinkdb
 @task
