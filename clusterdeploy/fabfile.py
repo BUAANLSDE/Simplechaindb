@@ -181,8 +181,7 @@ def set_shards(num_shards):
 @parallel
 def start_bigchaindb():
     with settings(warn_only=True):
-        user_group = env.user
-        sudo('screen -d -m simplechaindb -y start &', pty=False,user=user_group,group=user_group)
+        sudo('screen -d -m simplechaindb -y start &', pty=False,user=env.user)
 
 @task
 @parallel
@@ -193,8 +192,7 @@ def stop_bigchaindb():
 @task
 @parallel
 def start_bigchaindb_load():
-    user_group = env.user
-    sudo('screen -d -m simplechaindb load &', pty=False,user=user_group,group=user_group)
+    sudo('screen -d -m simplechaindb load &', pty=False,user=env.user)
 
 # rethinkdb
 @task
