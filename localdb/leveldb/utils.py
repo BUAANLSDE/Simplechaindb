@@ -6,7 +6,9 @@ import rethinkdb as r
 import bigchaindb
 import rapidjson
 
+import os
 import logging
+
 logger = logging.getLogger(__name__)
 
 # path should be exist
@@ -20,11 +22,19 @@ config = {
 
 #singleton localdb pool
 class LocalDBPool(object):
+    # tips: first should release the leveldb dir block
+    parent_dir = config['database']['path']
+    for table in config['database']['tables']:
+        try:
+            os.remove(parent_dir + table + "//LOCK")
+        except Exception as ex:
+            logger.warn(str(ex))
+            # continue
 
     conn = dict()
-    conn['header'] = l.DB(config['database']['path']+'header/',create_if_missing=True)
-    conn['bigchain'] = l.DB(config['database']['path']+'bigchain/',create_if_missing=True)
-    conn['votes'] = l.DB(config['database']['path']+'votes/',create_if_missing=True)
+    conn['header'] = l.DB(parent_dir+'header/',create_if_missing=True)
+    conn['bigchain'] = l.DB(parent_dir+'bigchain/',create_if_missing=True)
+    conn['votes'] = l.DB(parent_dir+'votes/',create_if_missing=True)
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -63,19 +73,28 @@ def init():
     logger.info('leveldb init done')
 
 
-def destroy():
+def close(conn):
+    """ close conn """
+    if conn:
+        l.close(conn)
+        logger.info('leveldb close conn ... ' + str(conn))
+
+
+def close_all():
     """ close all databases dir """
     tables = config['database']['tables']
-    logger.info('leveldb drop all databases '+str(tables))
+    logger.info('leveldb close all databases '+str(tables))
+    result=[]
     for table in tables:
         if table is not None:
             try:
                 dir = config['database']['path']+table+'/'
-                l.destroy_db(dir)
+                l.close(dir)
+                result.append(dir)
             except:
                 # print(table + ' is not exist')
                 continue
-    logger.info('leveldb destroy...')
+    logger.info('leveldb close all...' + str(result))
 
 
 def get_conn(name):
