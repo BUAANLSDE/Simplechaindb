@@ -16,11 +16,12 @@ class Methods:
     @staticmethod
     def deal_block(block):
         block = bytes(block).decode()
+        block_json_str = block
         block = rapidjson.loads(block)
         logger.info('block deal ing...' + str(block))
         block_id = block['id']
         logger.info('block_id is : ' + str(block_id))
-        leveldb.insert(Methods.conn_bigchain, block_id, block)
+        leveldb.insert(Methods.conn_bigchain, block_id, block_json_str)
         block_num = leveldb.get(Methods.conn_header, 'block_num')
         block_num = int(block_num)
         block_num = block_num + 1
@@ -31,13 +32,14 @@ class Methods:
     @staticmethod
     def deal_vote(vote):
         vote = bytes(vote).decode()
+        vote_json_str = vote
         vote = rapidjson.loads(vote)
         logger.info('vote deal ing... ' + str(vote))
         previous_block = vote['vote']['previous_block']
         node_pubkey = vote['node_pubkey']
         vote_key = previous_block + '-' + node_pubkey
         logger.info('vote_key:\n' + str(vote_key))
-        leveldb.insert(Methods.conn_votes, vote_key, vote)
+        leveldb.insert(Methods.conn_votes, vote_key, vote_json_str)
         # Methods.get_votes_for_block(Methods.conn_votes,previous_block)
 
 

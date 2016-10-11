@@ -4,6 +4,7 @@
 import plyvel as l
 import rethinkdb as r
 import bigchaindb
+import rapidjson
 
 import logging
 logger = logging.getLogger(__name__)
@@ -53,7 +54,8 @@ def init():
         genesis_block = r.db('bigchain').table('bigchain').order_by(r.asc(r.row['block']['timestamp'])).limit(1).run(
             bigchaindb.Bigchain().conn)[0]
         genesis_block_id = genesis_block['id']
-        insert(conn_bigchain, genesis_block_id, genesis_block)
+        genesis_block_json_str = rapidjson.dumps(genesis_block)
+        insert(conn_bigchain, genesis_block_id, genesis_block_json_str)
         insert(conn_header, 'genesis_block_id', genesis_block_id)
         insert(conn_header, 'block_num', 1)
         insert(conn_header, 'current_block_id', genesis_block_id)
