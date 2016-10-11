@@ -24,12 +24,13 @@ config = {
 class LocalDBPool(object):
     # tips: first should release the leveldb dir block
     parent_dir = config['database']['path']
-    if parent_dir and not os.path.exists(parent_dir):
-        os.makedirs(parent_dir)
+    # if parent_dir and not os.path.exists(parent_dir):
+    #     os.makedirs(parent_dir)
 
     for table in config['database']['tables']:
         try:
             lock_path = parent_dir + table + "//LOCK"
+            logger.warn('remove leveldb LOCK ' + str(lock_path))
             if(os.path.exists(lock_path)):
                 os.remove(lock_path)
         except Exception as ex:
