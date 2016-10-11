@@ -311,3 +311,32 @@ def  set_node(host,password):
     env['passwords'][host]=password
     env['hosts']=env['passwords'].keys()
 
+
+###################
+# Install Collectd
+@task
+@parallel
+def install_collectd():
+    """Installation of Collectd"""
+    with settings(warn_only=True):
+        sudo("echo 'collectd install' ")
+        sudo("echo 'deb http://http.debian.net/debian wheezy-backports-sloppy main contrib non-free' | sudo tee /etc/apt/sources.list.d/backports.list")
+        sudo("apt-get update")
+        sudo("apt-get install -y --force-yes -t wheezy-backports-sloppy collectd collectd-utils")
+
+# Configure Collectd
+@task
+@parallel
+def configure_collectd():
+    """Confiure of Collectd"""
+    with settings(warn_only=True):
+        # fix: lib version too high
+        sudo('ln -sf /lib/x86_64-linux-gnu/libudev.so.?.?.? /lib/x86_64-linux-gnu/libudev.so.0')
+        sudo('ldconfig')
+        # copy config file to target system
+        put('conf/collectd.conf.template',
+            '/etc/collectd/collectd.conf',
+            mode=0x0600,
+            use_sudo=True)
+        # finally restart instance
+        sudo('service collectd restart', pty=False)

@@ -17,6 +17,7 @@ fi
 
 
 ./install_base_software.sh
+./setup_collectd.sh
 ./install_rethinkdb.sh
 ./configure_rethinkdb.sh
 #install localdb

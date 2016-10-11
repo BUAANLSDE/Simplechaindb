@@ -136,7 +136,7 @@ LoadPlugin memory
 #LoadPlugin multimeter
 #LoadPlugin mysql
 #LoadPlugin netlink
-#LoadPlugin network
+LoadPlugin network
 #LoadPlugin nfs
 #LoadPlugin nginx
 #LoadPlugin notify_desktop
@@ -331,11 +331,11 @@ LoadPlugin users
 #	IgnoreSelected false
 #</Plugin>
 
-#<Plugin cpu>
-#	ReportByCpu true
-#	ReportByState true
-#	ValuesPercentage true
-#</Plugin>
+<Plugin cpu>
+	ReportByCpu true
+	ReportByState true
+	ValuesPercentage true
+</Plugin>
 
 #<Plugin csv>
 #	DataDir "/var/lib/collectd/csv"
@@ -683,9 +683,9 @@ LoadPlugin users
 #	IgnoreSelected false
 #</Plugin>
 
-#<Plugin network>
+<Plugin network>
 #	# client setup:
-#	Server "ff18::efc0:4a42" "25826"
+	Server "127.0.0.1" "25826"
 #	<Server "239.192.74.66" "25826">
 #		SecurityLevel Encrypt
 #		Username "user"
@@ -712,7 +712,7 @@ LoadPlugin users
 #
 #	# "garbage collection"
 #	CacheFlush 1800
-#</Plugin>
+</Plugin>
 
 #<Plugin nginx>
 #	URL "http://localhost/status?auto"
