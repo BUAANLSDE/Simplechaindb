@@ -70,8 +70,8 @@ def install_localdb():
     with settings(warn_only=True):
         user_group = env.user
         sudo(" echo 'leveldb & plyvel install' ")
-        sudo("mkdir -p /data/leveldb",user=user_group,group=user_group)
-        # sudo("chown -R " + user_group + ':' + user_group + ' /data/leveldb')
+        sudo("mkdir -p /data/leveldb")
+        sudo("chown -R " + user_group + ':' + user_group + ' /data/leveldb')
         sudo('pip3 install leveldb')
         sudo('apt-get install libleveldb1 libleveldb-dev libsnappy1 libsnappy-dev')
         sudo('apt-get -y -f install')
