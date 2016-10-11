@@ -70,8 +70,8 @@ def install_localdb():
     with settings(warn_only=True):
         user_group = env.user
         sudo(" echo 'leveldb & plyvel install' ")
-        sudo("mkdir -p /data/leveldb")
-        sudo("chown -R " + user_group + ':' + user_group + ' /data/leveldb')
+        sudo("mkdir -p /data/leveldb",user=user_group,group=user_group)
+        # sudo("chown -R " + user_group + ':' + user_group + ' /data/leveldb')
         sudo('pip3 install leveldb')
         sudo('apt-get install libleveldb1 libleveldb-dev libsnappy1 libsnappy-dev')
         sudo('apt-get -y -f install')
@@ -181,7 +181,8 @@ def set_shards(num_shards):
 @parallel
 def start_bigchaindb():
     with settings(warn_only=True):
-        sudo('screen -d -m simplechaindb -y start &', pty=False)
+        user_group = env.user
+        sudo('screen -d -m simplechaindb -y start &', pty=False,user=user_group,group=user_group)
 
 @task
 @parallel
@@ -192,7 +193,8 @@ def stop_bigchaindb():
 @task
 @parallel
 def start_bigchaindb_load():
-    sudo('screen -d -m simplechaindb load &', pty=False)
+    user_group = env.user
+    sudo('screen -d -m simplechaindb load &', pty=False,user=user_group,group=user_group)
 
 # rethinkdb
 @task
