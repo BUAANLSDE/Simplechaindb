@@ -90,14 +90,14 @@ def install_localdb():
 def install_rethinkdb():
     """Installation of RethinkDB"""
     with settings(warn_only=True):
-        sudo("mkdir -p /data")
+        sudo("mkdir -p /data/rethinkdb")
         # install rethinkdb
         sudo("echo 'deb http://download.rethinkdb.com/apt trusty main' | sudo tee /etc/apt/sources.list.d/rethinkdb.list")
         sudo("wget -qO- http://download.rethinkdb.com/apt/pubkey.gpg | sudo apt-key add -")
         sudo("apt-get update")
         sudo("apt-get -y install rethinkdb")
         # initialize data-dir
-        sudo('rm -rf /data/*')
+        sudo('rm -rf /data/rethinkdb/*')
 
 # Configure RethinkDB
 @task
