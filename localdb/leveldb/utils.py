@@ -30,14 +30,15 @@ class LocalDBPool(object):
     for table in config['database']['tables']:
         try:
             lock_path = parent_dir + table + "//LOCK"
-            logger.warn('remove leveldb LOCK ' + str(lock_path))
             if(os.path.exists(lock_path)):
+                logger.warn('remove leveldb LOCK ' + str(lock_path))
                 os.remove(lock_path)
         except Exception as ex:
             # logger.warn(str(ex))
             continue
 
     conn = dict()
+    logger.warn('conn info: ' + str(conn.items()))
     conn['header'] = l.DB(parent_dir+'header/',create_if_missing=True)
     conn['bigchain'] = l.DB(parent_dir+'bigchain/',create_if_missing=True)
     conn['votes'] = l.DB(parent_dir+'votes/',create_if_missing=True)
@@ -53,8 +54,6 @@ def init():
     logger.info('leveldb init...')
     conn_bigchain = get_conn('bigchain')
     conn_header = get_conn('header')
-
-    logger.info('leveldb init...')
     logger.info('leveldb/header init...')
     logger.info('leveldb/header init host...' + str(bigchaindb.config['database']['host']))
     logger.info('leveldb/header init public_key...' + str(bigchaindb.config['keypair']['public']))

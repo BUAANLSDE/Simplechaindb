@@ -41,11 +41,6 @@ def publish(queue_name,body='Hello World!',exchange=''):
     # print(" [x] Sent " + body)
 
 
-# def callback(ch, method, properties, body):
-#     print(" [x] Received %r" % body)
-#     # print(str(body))
-
-
 def consume(callback,queue_name,no_ack=True):
     channel = get_channel(queue_name)
     if channel:
