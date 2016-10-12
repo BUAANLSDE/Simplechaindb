@@ -24,6 +24,7 @@ import json
 import argparse
 
 from hostlist import public_dns_names
+from monitor_server import gMonitorServer
 
 if os.path.isfile('keypairs.py'):
     from keypairs import keypairs_list
@@ -101,6 +102,8 @@ for i, filename in enumerate(conf_files):
         # Set the api_endpoint
         conf_dict['api_endpoint'] = 'http://' + public_dns_names[i] + \
                                     ':9984/api/v1'
+        # Set Statsd host
+        conf_dict['statsd']['host'] = gMonitorServer
 
     # Delete the config file
     os.remove(file_path)

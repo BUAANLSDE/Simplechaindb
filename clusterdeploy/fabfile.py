@@ -334,7 +334,7 @@ def configure_collectd():
         sudo('ln -sf /lib/x86_64-linux-gnu/libudev.so.?.?.? /lib/x86_64-linux-gnu/libudev.so.0')
         sudo('ldconfig')
         # copy config file to target system
-        put('conf/collectd.conf.template',
+        put('conf/collectd.conf',
             '/etc/collectd/collectd.conf',
             mode=0x0600,
             use_sudo=True)
