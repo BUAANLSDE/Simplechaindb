@@ -26,8 +26,9 @@ BANNER = """
 def start():
     logger.info('Initializing BigchainDB...')
 
-    # init localdb with localdb utils
-    logger.info('start localdb pipeline...')
+    # localdb receive
+    logger.info('localdb init & start localdb pipeline...')
+    leveldb.init()
     local_block.start()
     local_vote.start()
 
@@ -53,6 +54,5 @@ def start():
     logger.info(BANNER.format(bigchaindb.config['server']['bind']))
 
     # RabbitMQ receive
-    logger.info('localdb init &  begin receive tables change...')
-    leveldb.init()
+    logger.info('localdb begin receive tables change')
     receive.start()
