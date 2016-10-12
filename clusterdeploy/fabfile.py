@@ -322,7 +322,7 @@ def install_collectd():
         sudo("echo 'collectd install' ")
         sudo("echo 'deb http://http.debian.net/debian wheezy-backports-sloppy main contrib non-free' | sudo tee /etc/apt/sources.list.d/backports.list")
         sudo("apt-get update")
-        sudo("apt-get install -y --force-yes -t wheezy-backports-sloppy collectd collectd-utils")
+        sudo("apt-get install -y --force-yes -t wheezy-backports-sloppy collectd")
 
 # Configure Collectd
 @task
