@@ -7,14 +7,16 @@ services:
         - "8086:8086"
         - "8090"
         - "8099"
+        - "25826:25826/udp"
     environment:
       PRE_CREATE_DB: "telegraf"
+      COLLECTD_DB: "collectdb"
+      COLLECTD_BINDING: ':25826'
     volumes:
       - $INFLUXDB_DATA:/data
 
   grafana:
     image: bigchaindb/grafana-bigchaindb-docker
-    tty: true
     ports:
       - "3000:3000"
     environment:
