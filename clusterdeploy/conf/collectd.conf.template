@@ -71,7 +71,7 @@ LoadPlugin syslog
 #</Plugin>
 
 <Plugin syslog>
-	LogLevel info
+	LogLevel warning
 </Plugin>
 
 #<Plugin log_logstash>
@@ -91,7 +91,7 @@ LoadPlugin syslog
 #LoadPlugin apcups
 #LoadPlugin ascent
 #LoadPlugin barometer
-LoadPlugin battery
+#LoadPlugin battery
 #LoadPlugin bind
 #LoadPlugin ceph
 #LoadPlugin cgroups
@@ -104,12 +104,12 @@ LoadPlugin cpu
 #LoadPlugin curl_json
 #LoadPlugin curl_xml
 #LoadPlugin dbi
-LoadPlugin df
+#LoadPlugin df
 LoadPlugin disk
 #LoadPlugin dns
 #LoadPlugin drbd
 #LoadPlugin email
-LoadPlugin entropy
+#LoadPlugin entropy
 #LoadPlugin ethstat
 #LoadPlugin exec
 #LoadPlugin fhcount
@@ -122,7 +122,7 @@ LoadPlugin interface
 #LoadPlugin ipmi
 #LoadPlugin iptables
 #LoadPlugin ipvs
-LoadPlugin irq
+#LoadPlugin irq
 #LoadPlugin java
 LoadPlugin load
 #LoadPlugin lvm
@@ -153,19 +153,19 @@ LoadPlugin network
 #LoadPlugin ping
 #LoadPlugin postgresql
 #LoadPlugin powerdns
-LoadPlugin processes
+#LoadPlugin processes
 #LoadPlugin protocols
 #LoadPlugin python
 #LoadPlugin redis
 #LoadPlugin rrdcached
-LoadPlugin rrdtool
+#LoadPlugin rrdtool
 #LoadPlugin sensors
 #LoadPlugin serial
 #LoadPlugin sigrok
 #LoadPlugin smart
 #LoadPlugin snmp
 #LoadPlugin statsd
-LoadPlugin swap
+#LoadPlugin swap
 #LoadPlugin table
 #LoadPlugin tail
 #LoadPlugin tail_csv
@@ -177,7 +177,7 @@ LoadPlugin swap
 #LoadPlugin turbostat
 #LoadPlugin unixsock
 #LoadPlugin uptime
-LoadPlugin users
+#LoadPlugin users
 #LoadPlugin uuid
 #LoadPlugin varnish
 #LoadPlugin virt
@@ -445,7 +445,7 @@ LoadPlugin users
 #	</Database>
 #</Plugin>
 
-<Plugin df>
+#<Plugin df>
 #	Device "/dev/sda1"
 #	Device "192.168.0.2:/mnt/nfs"
 #	MountPoint "/home"
@@ -453,23 +453,23 @@ LoadPlugin users
 
 	# ignore rootfs; else, the root file-system would appear twice, causing
 	# one of the updates to fail and spam the log
-	FSType rootfs
+#	FSType rootfs
 	# ignore the usual virtual / temporary file-systems
-	FSType sysfs
-	FSType proc
-	FSType devtmpfs
-	FSType devpts
-	FSType tmpfs
-	FSType fusectl
-	FSType cgroup
-	IgnoreSelected true
+#	FSType sysfs
+#	FSType proc
+#	FSType devtmpfs
+#	FSType devpts
+#	FSType tmpfs
+#	FSType fusectl
+#	FSType cgroup
+#	IgnoreSelected true
 
 #	ReportByDevice false
 #	ReportInodes false
 
 #	ValuesAbsolute true
 #	ValuesPercentage false
-</Plugin>
+#</Plugin>
 
 #<Plugin disk>
 #	Disk "hda"
