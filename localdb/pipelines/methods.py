@@ -18,7 +18,7 @@ class Methods:
         block = bytes(block).decode()
         block_json_str = block
         block = rapidjson.loads(block)
-        logger.info('block deal ing...' + str(block))
+        # logger.info('block deal ing...' + str(block))
         block_id = block['id']
         # logger.info('block_id is : ' + str(block_json_str))
         leveldb.insert(Methods.conn_bigchain, block_id, block_json_str)
@@ -34,7 +34,7 @@ class Methods:
         vote = bytes(vote).decode()
         vote_json_str = vote
         vote = rapidjson.loads(vote)
-        logger.info('vote deal ing... ' + str(vote_json_str))
+        # logger.info('vote deal ing... ' + str(vote_json_str))
         previous_block = vote['vote']['previous_block']
         node_pubkey = vote['node_pubkey']
         vote_key = previous_block + '-' + node_pubkey
