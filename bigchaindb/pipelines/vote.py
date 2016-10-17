@@ -9,10 +9,12 @@ from collections import Counter
 
 from multipipes import Pipeline, Node
 
-from bigchaindb import config_utils, exceptions
+from bigchaindb import config_utils, exceptions, config
+from bigchaindb.monitor import Monitor
 from bigchaindb.pipelines.utils import ChangeFeed
 from bigchaindb import Bigchain
 
+monitor = Monitor()
 
 def create_invalid_tx():
     """Create and return an invalid transaction.
@@ -53,7 +55,14 @@ class Vote:
     def validate_block(self, block):
         if not self.bigchain.has_previous_vote(block):
             try:
-                self.consensus.validate_block(self.bigchain, block)
+                # zy@secn
+                if monitor is not None:
+                    #with monitor.timer('validate_block', rate=config['statsd']['rate']):
+                    with monitor.timer('validate_block'):
+                        self.consensus.validate_block(self.bigchain, block)
+                else:
+                    self.consensus.validate_block(self.bigchain, block)
+                #self.consensus.validate_block(self.bigchain, block)
                 valid = True
             except (exceptions.InvalidHash,
                     exceptions.OperationError,

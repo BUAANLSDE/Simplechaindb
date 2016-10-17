@@ -1427,3 +1427,8 @@ class Bigchain(object):
             response = response1 + response2
 
         return response
+
+    # zy@secn
+    def get_backlog_tx_number(self):
+        txs_count = r.table('backlog', read_mode=self.read_mode).count().run(self.conn)
+        return txs_count
