@@ -120,7 +120,7 @@ def confiure_rethinkdb():
 def install_bigchaindb_from_git_archive():
     put('bigchaindb-archive.tar.gz')
     run('tar xvfz bigchaindb-archive.tar.gz')
-    sudo('pip3 install --upgrade setuptools')
+    sudo('pip3 install -i http://pypi.douban.com/simple --upgrade setuptools')
     # sudo('pip3 install . --upgrade')
     sudo('python3 setup.py install')
     run('rm bigchaindb-archive.tar.gz')
