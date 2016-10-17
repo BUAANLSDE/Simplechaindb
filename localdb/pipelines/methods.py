@@ -9,28 +9,46 @@ logger = logging.getLogger(__name__)
 
 
 class Methods:
-    conn_header = leveldb.LocalDBPool().conn['header']
-    conn_bigchain = leveldb.LocalDBPool().conn['bigchain']
-    conn_votes = leveldb.LocalDBPool().conn['votes']
 
     @staticmethod
     def deal_block(block):
+        """Write the block obj to leveldb
+
+        Args:
+            block(bytes) —— json string of bigchain block obj
+
+        Returns:
+
+        """
+
+        conn_header = leveldb.LocalDBPool().conn['header']
+        conn_bigchain = leveldb.LocalDBPool().conn['bigchain']
         block = bytes(block).decode()
         block_json_str = block
         block = rapidjson.loads(block)
         # logger.info('block deal ing...' + str(block))
         block_id = block['id']
         # logger.info('block_id is : ' + str(block_json_str))
-        leveldb.insert(Methods.conn_bigchain, block_id, block_json_str)
-        block_num = leveldb.get(Methods.conn_header, 'block_num')
+        block_num = leveldb.get(conn_header, 'block_num')
         block_num = int(block_num)
         block_num = block_num + 1
-        leveldb.update(Methods.conn_header, 'block_num', block_num)
-        leveldb.update(Methods.conn_header, 'current_block_id', block_id)
+        leveldb.insert(conn_bigchain, block_id, block_json_str)
+        leveldb.update(conn_header, 'current_block_id', block_id)
+        leveldb.update(conn_header, 'block_num', block_num)
         # Methods.get_base_info(Methods.conn_header,Methods.conn_bigchain)
 
     @staticmethod
     def deal_vote(vote):
+        """Write the block obj to leveldb
+
+        Args:
+            vote(bytes) —— json string of bigchain vote obj
+
+        Returns:
+
+        """
+
+        conn_votes = leveldb.LocalDBPool().conn['votes']
         vote = bytes(vote).decode()
         vote_json_str = vote
         vote = rapidjson.loads(vote)
@@ -39,7 +57,7 @@ class Methods:
         node_pubkey = vote['node_pubkey']
         vote_key = previous_block + '-' + node_pubkey
         # logger.info('vote_key:\n' + str(vote_key))
-        leveldb.insert(Methods.conn_votes, vote_key, vote_json_str)
+        leveldb.insert(conn_votes, vote_key, vote_json_str)
         # Methods.get_votes_for_block(Methods.conn_votes,previous_block)
 
 

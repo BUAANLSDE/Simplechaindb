@@ -6,6 +6,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 class RamqUtils(object):
+    """Singleton RamqUtils encapsulates rabbitmq`s base ops base on pika
+
+    Attributes:
+        channel: The dict include the block and vote channel
+
+    """
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         'localhost'))
@@ -27,11 +33,32 @@ class RamqUtils(object):
 
 
 def get_channel(queue_name):
+    """Get the channel with queue_name
+
+    Args:
+        queue_name: the mq`s name
+
+    Returns:
+        the channel
+
+    """
+
     if queue_name in ['blocks','votes']:
         return RamqUtils.channel[queue_name]
 
 
 def publish(queue_name,body='Hello World!',exchange=''):
+    """Publish the content or message to the queue
+
+        pika.BasicProperties(delivery_mode=2) will make message persistent
+
+    Args:
+        queue_name: the mq`s name
+        body(str) —— the content will be publish
+        exchange:
+
+    """
+
     channel = get_channel(queue_name)
     if channel:
         channel.basic_publish(exchange=exchange,
@@ -42,6 +69,15 @@ def publish(queue_name,body='Hello World!',exchange=''):
 
 
 def consume(callback,queue_name,no_ack=True):
+    """Publish the content or message to the queue
+
+    Args:
+        callback(function) —— deal the queue messages
+        queue_name: the mq`s name
+        no_ack(bool) ——
+
+    """
+
     channel = get_channel(queue_name)
     if channel:
         channel.basic_consume(callback,
@@ -52,10 +88,26 @@ def consume(callback,queue_name,no_ack=True):
 
 
 def start_consume(channel):
+    """Start the channel to consume
+
+    Args:
+        channel:
+
+    """
+
     if channel:
         channel.start_consuming()
 
+
 def close(reply_code=200, reply_text='Normal shutdown'):
+    """Close the RabbitMQ
+
+    Args:
+        reply_code:
+        reply_text:
+
+    """
+
     RamqUtils.connection.close(reply_code=reply_code, reply_text=reply_text)
 
 

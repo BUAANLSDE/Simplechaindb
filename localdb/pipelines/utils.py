@@ -53,7 +53,6 @@ class LocalChangeFeed(Node):
             is_update = not is_insert and not is_delete
 
             if is_insert and (self.operation & LocalChangeFeed.INSERT):
-                #TODO new block enqueue wx
                 if self.table == 'bigchain':
                     block = rapidjson.dumps(change['new_val'])
                     ramq.publish('blocks',block)

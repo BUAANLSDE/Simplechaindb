@@ -5,28 +5,30 @@ import plyvel as l
 import rethinkdb as r
 import bigchaindb
 import rapidjson
+from localdb import config
 
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 
-# path should be exist
-config = {
-    'database': {
-        'path': '/localdb/',
-        'tables':['header','bigchain','votes']
-    },
-    'encoding':'utf-8'
-}
 
-#singleton localdb pool
 class LocalDBPool(object):
-    # tips: first should release the leveldb dir block
-    parent_dir = config['database']['path']
-    # if parent_dir and not os.path.exists(parent_dir):
-    #     os.makedirs(parent_dir)
+    """Singleton LocalDBPool encapsulates leveldb`s base ops base on plyvel
 
+    Warn:
+        1. leveldb [Only a single process (possibly multi-threaded) can access a particular database at a time.]
+        2. multi-thread [Singleton can deal.]
+        3. multi process [We`ll can only do is that removes the special dir`s LOCK.]
+
+    Attributes:
+        conn:   The dict include the dir link config['database']['tables']
+
+    """
+
+    parent_dir = config['database']['path']
+
+    # TODO the crude deal for multiprocess
     for table in config['database']['tables']:
         try:
             lock_path = parent_dir + table + "//LOCK"
@@ -34,23 +36,30 @@ class LocalDBPool(object):
                 logger.warn('remove leveldb LOCK ' + str(lock_path))
                 os.remove(lock_path)
         except Exception as ex:
-            # logger.warn(str(ex))
+            logger.warn(str(ex))
             continue
 
+    # Only run once with threads --- start
+    # The follow will run more than once ,if in multiprocess
     conn = dict()
     logger.warn('conn info: ' + str(conn.items()))
     conn['header'] = l.DB(parent_dir+'header/',create_if_missing=True)
     conn['bigchain'] = l.DB(parent_dir+'bigchain/',create_if_missing=True)
     conn['votes'] = l.DB(parent_dir+'votes/',create_if_missing=True)
+    logger.info('LocalDBPool conn ' + str(conn.items()))
+    # Only run once with threads --- end
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
+            logger.info('init localpool start')
             cls.instance = super(LocalDBPool, cls).__new__(cls)
-            logger.info('init localpool ...')
+            logger.info('init localpool end')
         return cls.instance
 
+
 def init():
-    """ init leveldb database by conn"""
+    """ Init leveldb database when process.py run"""
+
     logger.info('leveldb init...')
     conn_bigchain = get_conn('bigchain')
     conn_header = get_conn('header')
@@ -79,14 +88,22 @@ def init():
 
 
 def close(conn):
-    """ close conn """
+    """Close the conn
+    Args:
+        conn: the leveldb dir pointer
+
+    Returns:
+
+    """
+
     if conn:
-        l.close(conn)
+        conn.close()
         logger.info('leveldb close conn ... ' + str(conn))
 
 
 def close_all():
-    """ close all databases dir """
+    """Close all databases dir """
+
     tables = config['database']['tables']
     logger.info('leveldb close all databases '+str(tables))
     result=[]
@@ -94,7 +111,7 @@ def close_all():
         if table is not None:
             try:
                 dir = config['database']['path']+table+'/'
-                l.close(dir)
+                close(dir)
                 result.append(dir)
             except:
                 # print(table + ' is not exist')
@@ -103,39 +120,117 @@ def close_all():
 
 
 def get_conn(name):
-    """ get the leveldb """
+    """Insert the value with the special key
+
+    Args:
+        name: the leveldb dir name
+
+    Returns:
+            the leveldb dir pointer
+    """
+
     return LocalDBPool.conn[name]
 
 
-def insert(conn,key,value):
+def insert(conn,key,value,sync=False):
+    """Insert the value with the special key
+
+      Args:
+          conn: the leveldb dir pointer
+          key:
+          sync(bool) – whether to use synchronous writes
+
+      Returns:
+
+    """
+
     # logger.info('leveldb insert...' + str(key) + ":" +str(value))
-    conn.put(bytes(str(key),config['encoding']),bytes(str(value),config['encoding']))
+    conn.put(bytes(str(key),config['encoding']),bytes(str(value),config['encoding']),sync=sync)
 
 
-def batch_insert(conn,dict):
-    with conn.write_batch() as b:
+def batch_insertOrUpdate(conn,dict,transaction=False,sync=False):
+    """Batch insert or update the value with the special key in dict
+
+    Args:
+        conn: the leveldb dir pointer
+        dict:
+        transaction(bool) –  whether to enable transaction-like behaviour when
+        the batch is used in a with block
+        sync(bool) – whether to use synchronous writes
+
+    Returns:
+
+    """
+
+    with conn.write_batch(transaction=transaction,sync=sync) as b:
         for key in dict:
             # logger.warn('key: ' + str(key) + ' --- value: ' + str(dict[key]))
             b.put(bytes(str(key),config['encoding']),bytes(str(dict[key]),config['encoding']))
 
 
-def delete(conn,key):
+def delete(conn,key,sync=False):
+    """Delete the value with the special key
+
+    Args:
+        conn: the leveldb dir pointer
+        key:
+        sync(bool) – whether to use synchronous writes
+
+    Returns:
+
+    """
+
     # logger.info('leveldb delete...' + str(key) )
-    conn.delete(bytes(str(key),config['encoding']))
+    conn.delete(bytes(str(key),config['encoding']),sync=sync)
 
 
-def batch_delete(conn,dict):
-    with conn.write_batch() as b:
+def batch_delete(conn,dict,transaction=False,sync=False):
+    """Batch delete the value with the special key in dict
+
+    Args:
+        conn: the leveldb dir pointer
+        dict:
+        transaction(bool) –  whether to enable transaction-like behaviour when
+        the batch is used in a with block
+        sync(bool) – whether to use synchronous writes
+
+    Returns:
+
+    """
+
+    with conn.write_batch(transaction=transaction,sync=sync) as b:
         for key,value in dict:
             b.delete(bytes(str(key),config['encoding']))
 
 
-def update(conn,key,value):
+def update(conn,key,value,sync=False):
+    """Update the value with the special key
+
+    Args:
+        conn: the leveldb dir pointer
+        key:
+        value(str) – value to set
+        sync(bool) – whether to use synchronous writes
+
+    Returns:
+
+    """
+
     # logger.info('leveldb update...' + str(key) + ":" +str(value))
-    conn.put(bytes(str(key),config['encoding']), bytes(str(value),config['encoding']))
+    conn.put(bytes(str(key),config['encoding']), bytes(str(value),config['encoding']),sync=sync)
 
 
 def get(conn,key):
+    """Get the value with the special key
+
+    Args:
+        conn: the leveldb dir pointer
+        key:
+
+    Returns:
+         the string
+    """
+
     # logger.info('leveldb get...' + str(key))
     # get the value for the bytes_key,if not exists return None
     # bytes_val = conn.get_property(bytes(key, config['encoding']))
@@ -144,15 +239,24 @@ def get(conn,key):
 
 
 def get_prefix(conn,prefix):
+    """Get the records with the special prefix.
+
+    block-v1=v1
+    block-v2=v2
+    block-v3=v3
+    prefix = 'block'  => {'-v1':'v1','-v2':'v2','-v3':'v3'}
+    prefix = 'block-' => {'v1':'v1','v2':'v2','v3':'v3'}
+
+    Args:
+        conn: the leveldb dir pointer
+        prefix: the key start with,before '-'
+
+    Returns:
+         the dict
     """
-        block-v1=v1
-        block-v2=v2
-        block-v3=v3
-        prefix = 'block'  => {'-v1':'v1','-v2':'v2','-v3':'v3'}
-        prefix = 'block-' => {'v1':'v1','v2':'v2','v3':'v3'}
-        """
-    logger.warn(str(conn) + ' , ' + str(prefix))
+
     if conn:
+        # logger.warn(str(conn) + ' , ' + str(prefix))
         bytes_dict_items = conn.prefixed_db(bytes(str(prefix),config['encoding']))
         result = {}
         for key,value in bytes_dict_items:
@@ -165,6 +269,17 @@ def get_prefix(conn,prefix):
 
 
 def get_withdefault(conn,key,default_value):
+    """Get the value with the key.
+
+    Args:
+        conn: the leveldb dir pointer
+        key:
+        default_value: if value is None,it will return
+
+    Returns:
+        the string
+    """
+
     # logger.info('leveldb get...' + str(key) + ",default_value=" + str(default_value))
     # get the value for the bytes_key,if not exists return defaule_value
     bytes_val = conn.get(bytes(str(key),config['encoding']),bytes(str(default_value),config['encoding']))
