@@ -72,15 +72,15 @@ def install_localdb():
         sudo(" echo 'leveldb & plyvel install' ")
         sudo("mkdir -p /localdb/{bigchain,votes,header}")
         sudo("chown -R " + user_group + ':' + user_group + ' /localdb')
-        sudo('pip3 install leveldb=0.194')
+        sudo('pip3 install leveldb==0.194')
         sudo('apt-get install libleveldb1 libleveldb-dev libsnappy1 libsnappy-dev')
         sudo('apt-get -y -f install')
-        sudo('pip3 install plyvel=0.9')
+        sudo('pip3 install plyvel==0.9')
 
         # ramq & pika install
         sudo(" echo 'ramq & pika install' ")
         sudo('apt-get -y install rabbitmq-server')
-        sudo('pip3 install pika=0.10.0')
+        sudo('pip3 install pika==0.10.0')
 
 
 
