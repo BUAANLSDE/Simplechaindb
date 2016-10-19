@@ -32,10 +32,10 @@ class Methods:
         block_num = leveldb.get(conn_header, 'block_num')
         block_num = int(block_num)
         block_num = block_num + 1
-        leveldb.insert(conn_bigchain, block_id, block_json_str)
-        leveldb.update(conn_header, 'current_block_id', block_id)
-        leveldb.update(conn_header, 'block_num', block_num)
-        # Methods.get_base_info(Methods.conn_header,Methods.conn_bigchain)
+        leveldb.insert(conn_bigchain, block_id, block_json_str,sync=False)
+        leveldb.update(conn_header, 'current_block_id', block_id,sync=False)
+        leveldb.update(conn_header, 'block_num', block_num,sync=False)
+        Methods.get_base_info(conn_header,conn_bigchain)
 
     @staticmethod
     def deal_vote(vote):
@@ -57,8 +57,8 @@ class Methods:
         node_pubkey = vote['node_pubkey']
         vote_key = previous_block + '-' + node_pubkey
         # logger.info('vote_key:\n' + str(vote_key))
-        leveldb.insert(conn_votes, vote_key, vote_json_str)
-        # Methods.get_votes_for_block(Methods.conn_votes,previous_block)
+        leveldb.insert(conn_votes, vote_key, vote_json_str,sync=False)
+        # Methods.get_votes_for_block(conn_votes,previous_block)
 
 
     @staticmethod
