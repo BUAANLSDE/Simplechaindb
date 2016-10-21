@@ -62,6 +62,13 @@ def install_base_software():
         sudo('pip3 install --upgrade pip')
         sudo('pip3 --version')
 
+@task
+@parallel
+def localdb_destroy():
+    sudo(" echo 'clear the leveldb data only' ")
+    sudo("rm -rf /localdb/{bigchain,votes,header}/*")
+
+
 # Install localdb
 @task
 @parallel
