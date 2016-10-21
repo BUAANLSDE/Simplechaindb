@@ -31,12 +31,21 @@ class LocalDBPool(object):
         if not hasattr(cls, 'instance'):
             logger.info('init localpool start')
             cls.instance = super(LocalDBPool, cls).__new__(cls)
-            parent_dir = config['database']['path']
+            database = config['database']
+            parent_dir = database['path']
+            block_size = database['block_size']
+            write_buffer_size = database['write_buffer_size']
+            max_open_files = database['max_open_files']
+            lru_cache_size = database['lru_cache_size']
+            print('leveldb config %s' %(database.items()))
             cls.instance.conn = dict()
             logger.warn('conn info: ' + str(cls.instance.conn.items()))
-            cls.instance.conn['header'] = l.DB(parent_dir + 'header/', create_if_missing=True)
-            cls.instance.conn['bigchain'] = l.DB(parent_dir + 'bigchain/', create_if_missing=True)
-            cls.instance.conn['votes'] = l.DB(parent_dir + 'votes/', create_if_missing=True)
+            cls.instance.conn['header'] = l.DB(parent_dir + 'header/', create_if_missing=True,write_buffer_size=write_buffer_size,
+                                               block_size=block_size, max_open_files=max_open_files,lru_cache_size=lru_cache_size)
+            cls.instance.conn['bigchain'] = l.DB(parent_dir + 'bigchain/', create_if_missing=True,write_buffer_size=write_buffer_size,
+                                                 block_size=block_size,max_open_files=max_open_files,lru_cache_size=lru_cache_size)
+            cls.instance.conn['votes'] = l.DB(parent_dir + 'votes/', create_if_missing=True,write_buffer_size=write_buffer_size,
+                                              block_size=block_size,max_open_files=max_open_files,lru_cache_size=lru_cache_size)
             logger.info('LocalDBPool conn ' + str(cls.instance.conn.items()))
             logger.info('init localpool end')
         return cls.instance
