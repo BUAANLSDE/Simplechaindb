@@ -13,6 +13,8 @@ from bigchaindb import util
 from bigchaindb import Bigchain
 from bigchaindb.web.views.info import info_views
 from bigchaindb.web.views.transactions import transaction_views
+from bigchaindb.web.apiForEleDemo.dealDemoData import electric_api
+
 
 from bigchaindb.monitor import Monitor
 
@@ -66,6 +68,7 @@ def create_app(settings):
 
     app.register_blueprint(info_views, url_prefix='/')
     app.register_blueprint(transaction_views, url_prefix='/api/v1')
+    app.register_blueprint(electric_api, url_prefix='/apifordemo/v1')
     return app
 
 
