@@ -62,6 +62,23 @@ def install_base_software():
         sudo('pip3 install --upgrade pip')
         sudo('pip3 --version')
 
+@task
+@parallel
+def init_localdb(flag='all'):
+    # clear rabbitmq
+    if flag == 'all' or flag == 'rabbitmq':
+        sudo(" echo 'clear the rabbitmq data' ")
+        sudo("rabbitmqctl stop_app")
+        sudo("rabbitmqctl force_reset")
+        sudo("rabbitmqctl start_app")
+
+    # clear leveldb
+    if flag == 'all' or flag == 'leveldb':
+        sudo(" echo 'clear the leveldb data only' ")
+        sudo("rm -rf /localdb/{bigchain,votes,header}/*")
+
+
+
 # Install localdb
 @task
 @parallel
@@ -81,6 +98,7 @@ def install_localdb():
         sudo(" echo 'ramq & pika install' ")
         sudo('apt-get -y install rabbitmq-server')
         sudo('pip3 install pika==0.10.0')
+        sudo('rabbitmq-server restart')
 
 
 

@@ -7,7 +7,6 @@ import bigchaindb
 import rapidjson
 from localdb import config
 
-import os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,33 +25,28 @@ class LocalDBPool(object):
 
     """
 
-    parent_dir = config['database']['path']
-
-    # TODO the crude deal for multiprocess
-    for table in config['database']['tables']:
-        try:
-            lock_path = parent_dir + table + "//LOCK"
-            if(os.path.exists(lock_path)):
-                logger.warn('remove leveldb LOCK ' + str(lock_path))
-                os.remove(lock_path)
-        except Exception as ex:
-            logger.warn(str(ex))
-            continue
-
-    # Only run once with threads --- start
-    # The follow will run more than once ,if in multiprocess
-    conn = dict()
-    logger.warn('conn info: ' + str(conn.items()))
-    conn['header'] = l.DB(parent_dir+'header/',create_if_missing=True)
-    conn['bigchain'] = l.DB(parent_dir+'bigchain/',create_if_missing=True)
-    conn['votes'] = l.DB(parent_dir+'votes/',create_if_missing=True)
-    logger.info('LocalDBPool conn ' + str(conn.items()))
-    # Only run once with threads --- end
+    # Only run once with process  start
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             logger.info('init localpool start')
             cls.instance = super(LocalDBPool, cls).__new__(cls)
+            database = config['database']
+            parent_dir = database['path']
+            block_size = database['block_size']
+            write_buffer_size = database['write_buffer_size']
+            max_open_files = database['max_open_files']
+            lru_cache_size = database['lru_cache_size']
+            print('leveldb config %s' %(database.items()))
+            cls.instance.conn = dict()
+            logger.warn('conn info: ' + str(cls.instance.conn.items()))
+            cls.instance.conn['header'] = l.DB(parent_dir + 'header/', create_if_missing=True,write_buffer_size=write_buffer_size,
+                                               block_size=block_size, max_open_files=max_open_files,lru_cache_size=lru_cache_size)
+            cls.instance.conn['bigchain'] = l.DB(parent_dir + 'bigchain/', create_if_missing=True,write_buffer_size=write_buffer_size,
+                                                 block_size=block_size,max_open_files=max_open_files,lru_cache_size=lru_cache_size)
+            cls.instance.conn['votes'] = l.DB(parent_dir + 'votes/', create_if_missing=True,write_buffer_size=write_buffer_size,
+                                              block_size=block_size,max_open_files=max_open_files,lru_cache_size=lru_cache_size)
+            logger.info('LocalDBPool conn ' + str(cls.instance.conn.items()))
             logger.info('init localpool end')
         return cls.instance
 
@@ -129,7 +123,7 @@ def get_conn(name):
             the leveldb dir pointer
     """
 
-    return LocalDBPool.conn[name]
+    return LocalDBPool().conn[name]
 
 
 def insert(conn,key,value,sync=False):
@@ -235,8 +229,10 @@ def get(conn,key):
     # get the value for the bytes_key,if not exists return None
     # bytes_val = conn.get_property(bytes(key, config['encoding']))
     bytes_val = conn.get(bytes(str(key), config['encoding']))
-    return bytes(bytes_val).decode(config['encoding'])
-
+    if bytes_val:
+        return bytes(bytes_val).decode(config['encoding'])
+    else:
+        return None
 
 def get_prefix(conn,prefix):
     """Get the records with the special prefix.

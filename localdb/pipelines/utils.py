@@ -5,7 +5,6 @@ import rethinkdb as r
 from multipipes import Node
 from bigchaindb import Bigchain
 
-import localdb.leveldb.utils as leveldb
 from localdb.ramq import utils as ramq
 import rapidjson
 
@@ -37,9 +36,6 @@ class LocalChangeFeed(Node):
         self.table = table
         self.operation = operation
         self.bigchain = Bigchain()
-        self.conn_header = leveldb.get_conn('header')
-        self.conn_bigchain = leveldb.get_conn('bigchain')
-        self.conn_votes = leveldb.get_conn('votes')
 
     def run_forever(self):
         for element in self.prefeed:

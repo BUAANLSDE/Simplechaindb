@@ -55,5 +55,8 @@ def start():
     logger.info('localdb RabbitMQ receive work...')
     channel_blocks = ramq.consume(callback_blocks, 'blocks', False)
     channel_votes = ramq.consume(callback_votes, 'votes', False)
+    # channel_votes.basic_qos(prefetch_count=1)
+    # channel_blocks.basic_qos(prefetch_count=1)
+    logger.info('process consume receive start work...')
     ramq.start_consume(channel_blocks)
     ramq.start_consume(channel_votes)

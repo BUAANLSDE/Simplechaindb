@@ -109,9 +109,3 @@ def close(reply_code=200, reply_text='Normal shutdown'):
     """
 
     RamqUtils.connection.close(reply_code=reply_code, reply_text=reply_text)
-
-
-
-
-
-

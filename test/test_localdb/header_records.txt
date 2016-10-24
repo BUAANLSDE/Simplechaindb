@@ -1,0 +1,21 @@
+raw_iterator: <plyvel._plyvel.RawIterator object at 0x7f2eeb1e3870>
+raw_iterator valid(): True
+The 1th records is: 
+ (b'block_num', b'53')
+
+The 2th records is: 
+ (b'current_block_id', b'0ab773d47fc561f8138d5fc4b690439a0c443cc67e552127a4f813e69151a06b')
+
+The 3th records is: 
+ (b'genesis_block_id', b'59569927c156a8ebcc201cae93e392f3b51008c4fc056fab8103b79a23ee1409')
+
+The 4th records is: 
+ (b'host', b'localhost')
+
+The 5th records is: 
+ (b'private_key', b'2HXLFZzzugroM1UmCxWgzdFfhWhnH6wpXtU3AFcGkgbt')
+
+The 6th records is: 
+ (b'public_key', b'6NysKAjghEPKsrgVsCHGTtsnKtovxNc91kpYwSyJctXb')
+
+The total records is: 6
