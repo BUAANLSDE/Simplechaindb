@@ -98,7 +98,7 @@ def install_localdb():
         sudo(" echo 'ramq & pika install' ")
         sudo('apt-get -y install rabbitmq-server')
         sudo('pip3 install pika==0.10.0')
-        sudo('rabbitmq-server restart')
+        #sudo('rabbitmq-server restart')
 
 
 
