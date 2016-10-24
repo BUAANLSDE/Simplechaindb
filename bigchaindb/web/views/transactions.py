@@ -113,8 +113,6 @@ def create_transaction():
 
         with monitor.timer('write_transaction', rate=bigchaindb.config['statsd']['rate']):
             val = bigchain.write_transaction(tx)
-        # zy@secn
-        monitor.gauge('tx_queue_gauge', value=bigchain.get_backlog_tx_number(), rate=bigchaindb.config['statsd']['rate'])
 
     return flask.jsonify(**tx)
 
