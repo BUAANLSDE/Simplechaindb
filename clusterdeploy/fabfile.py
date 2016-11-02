@@ -65,17 +65,19 @@ def install_base_software():
 @task
 @parallel
 def init_localdb(flag='all'):
-    # clear rabbitmq
-    if flag == 'all' or flag == 'rabbitmq':
-        sudo(" echo 'clear the rabbitmq data' ")
-        sudo("rabbitmqctl stop_app")
-        sudo("rabbitmqctl force_reset")
-        sudo("rabbitmqctl start_app")
+    with settings(warn_only=True):
+        # clear rabbitmq
+        # if flag == 'all' or flag == 'rabbitmq':
+        #     sudo(" echo 'clear the rabbitmq data' ")
+        #     sudo("rabbitmqctl stop_app")
+        #     sudo("rabbitmqctl reset")
+        #     sudo("rabbitmqctl stop")
+        #     sudo("rabbitmqctl start_app")
 
-    # clear leveldb
-    if flag == 'all' or flag == 'leveldb':
-        sudo(" echo 'clear the leveldb data only' ")
-        sudo("rm -rf /localdb/{bigchain,votes,header}/*")
+        # clear leveldb
+        if flag == 'all' or flag == 'leveldb':
+            sudo(" echo 'clear the leveldb data only' ")
+            sudo("rm -rf /localdb/{bigchain,votes,header}/*")
 
 
 
@@ -98,7 +100,7 @@ def install_localdb():
         sudo(" echo 'ramq & pika install' ")
         sudo('apt-get -y install rabbitmq-server')
         sudo('pip3 install pika==0.10.0')
-        sudo('rabbitmq-server restart')
+        #sudo('rabbitmq-server restart')
 
 
 

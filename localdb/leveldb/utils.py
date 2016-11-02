@@ -58,11 +58,13 @@ def init():
     conn_bigchain = get_conn('bigchain')
     conn_header = get_conn('header')
     logger.info('leveldb/header init...')
-    logger.info('leveldb/header init host...' + str(bigchaindb.config['database']['host']))
+    # logger.info('leveldb/header init host...' + str(bigchaindb.config['database']['host']))
+    logger.info('leveldb/header init host...' + str(bigchaindb.config['server']['bind']))
     logger.info('leveldb/header init public_key...' + str(bigchaindb.config['keypair']['public']))
     logger.info('leveldb/header init private_key...' + str(bigchaindb.config['keypair']['private']))
 
-    update(conn_header, 'host', bigchaindb.config['database']['host'])
+    # update(conn_header, 'host', bigchaindb.config['database']['host'])
+    update(conn_header, 'host', bigchaindb.config['server']['bind'])
     update(conn_header, 'public_key', bigchaindb.config['keypair']['public'])
     update(conn_header, 'private_key', bigchaindb.config['keypair']['private'])
 
