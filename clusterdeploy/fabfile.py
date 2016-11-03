@@ -240,7 +240,7 @@ def start_bigchaindb_load_processes_counts(m=None,c=None):
         v = c
     if len(flag) == 1:
         sudo('screen -d -m simplechaindb load -' + flag + ' ' + v + ' &', pty=False)
-        
+
     if len(flag) == 2:
         sudo('screen -d -m simplechaindb load -m ' + m + ' -c ' + c + ' &', pty=False)
 
