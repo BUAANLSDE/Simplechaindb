@@ -5,7 +5,7 @@
 set -e
 
 # Install collectd
-fab install_collectd
+# fab install_collectd
 # (Re)create the Collectd configuration file conf/collectd.conf
 python create_collectd_conf.py
 # Configure collectd.conf and restart
