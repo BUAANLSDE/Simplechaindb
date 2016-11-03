@@ -30,9 +30,9 @@ def dummy_block():
 
 class TestBigchainApi(object):
     def test_get_last_voted_block_cyclic_blockchain(self, b, monkeypatch):
-        from bigchaindb_common.crypto import SigningKey
-        from bigchaindb_common.exceptions import CyclicBlockchainError
-        from bigchaindb_common.util import serialize
+        from bigchaindb.common.crypto import SigningKey
+        from bigchaindb.common.exceptions import CyclicBlockchainError
+        from bigchaindb.common.util import serialize
         from bigchaindb.models import Transaction
 
         b.create_genesis_block()
@@ -55,7 +55,7 @@ class TestBigchainApi(object):
 
     def test_try_voting_while_constructing_cyclic_blockchain(self, b,
                                                              monkeypatch):
-        from bigchaindb_common.exceptions import CyclicBlockchainError
+        from bigchaindb.common.exceptions import CyclicBlockchainError
         from bigchaindb.models import Transaction
 
         b.create_genesis_block()
@@ -94,7 +94,7 @@ class TestBigchainApi(object):
         assert not matches
 
     def test_get_spent_with_double_spend(self, b, monkeypatch):
-        from bigchaindb_common.exceptions import DoubleSpend
+        from bigchaindb.common.exceptions import DoubleSpend
         from bigchaindb.models import Transaction
 
         b.create_genesis_block()
@@ -128,7 +128,7 @@ class TestBigchainApi(object):
             b.get_spent(tx.id, 0)
 
     def test_get_block_status_for_tx_with_double_spend(self, b, monkeypatch):
-        from bigchaindb_common.exceptions import DoubleSpend
+        from bigchaindb.common.exceptions import DoubleSpend
         from bigchaindb.models import Transaction
 
         b.create_genesis_block()
@@ -263,9 +263,11 @@ class TestBigchainApi(object):
     def test_genesis_block(self, b):
         import rethinkdb as r
         from bigchaindb.util import is_genesis_block
+        from bigchaindb.db.utils import get_conn
+
         response = list(r.table('bigchain')
                         .filter(is_genesis_block)
-                        .run(b.conn))
+                        .run(get_conn()))
 
         assert len(response) == 1
         block = response[0]
@@ -275,8 +277,10 @@ class TestBigchainApi(object):
 
     def test_create_genesis_block_fails_if_table_not_empty(self, b):
         import rethinkdb as r
-        from bigchaindb_common.exceptions import GenesisBlockAlreadyExistsError
+        from bigchaindb.common.exceptions import GenesisBlockAlreadyExistsError
         from bigchaindb.util import is_genesis_block
+        from bigchaindb.db.utils import get_conn
+
         b.create_genesis_block()
 
         with pytest.raises(GenesisBlockAlreadyExistsError):
@@ -284,15 +288,17 @@ class TestBigchainApi(object):
 
         genesis_blocks = list(r.table('bigchain')
                               .filter(is_genesis_block)
-                              .run(b.conn))
+                              .run(get_conn()))
 
         assert len(genesis_blocks) == 1
 
     @pytest.mark.skipif(reason='This test may not make sense after changing the chainification mode')
     def test_get_last_block(self, b):
         import rethinkdb as r
+        from bigchaindb.db.utils import get_conn
+
         # get the number of blocks
-        num_blocks = r.table('bigchain').count().run(b.conn)
+        num_blocks = r.table('bigchain').count().run(get_conn())
 
         # get the last block
         last_block = b.get_last_block()
@@ -327,7 +333,7 @@ class TestBigchainApi(object):
         assert prev_block_id == last_block['id']
 
     def test_create_empty_block(self, b):
-        from bigchaindb_common.exceptions import OperationError
+        from bigchaindb.common.exceptions import OperationError
 
         with pytest.raises(OperationError) as excinfo:
             b.create_block([])
@@ -338,11 +344,12 @@ class TestBigchainApi(object):
         import rethinkdb as r
         from bigchaindb import util
         from bigchaindb.models import Block
+        from bigchaindb.db.utils import get_conn
 
         b.create_genesis_block()
         genesis = list(r.table('bigchain')
                        .filter(util.is_genesis_block)
-                       .run(b.conn))[0]
+                       .run(get_conn()))[0]
         genesis = Block.from_dict(genesis)
         gb = b.get_last_voted_block()
         assert gb == genesis
@@ -407,25 +414,27 @@ class TestBigchainApi(object):
     def test_no_vote_written_if_block_already_has_vote(self, b):
         import rethinkdb as r
         from bigchaindb.models import Block
+        from bigchaindb.db.utils import get_conn
 
         genesis = b.create_genesis_block()
         block_1 = dummy_block()
         b.write_block(block_1, durability='hard')
 
         b.write_vote(b.vote(block_1.id, genesis.id, True))
-        retrieved_block_1 = r.table('bigchain').get(block_1.id).run(b.conn)
+        retrieved_block_1 = r.table('bigchain').get(block_1.id).run(get_conn())
         retrieved_block_1 = Block.from_dict(retrieved_block_1)
 
         # try to vote again on the retrieved block, should do nothing
         b.write_vote(b.vote(retrieved_block_1.id, genesis.id, True))
-        retrieved_block_2 = r.table('bigchain').get(block_1.id).run(b.conn)
+        retrieved_block_2 = r.table('bigchain').get(block_1.id).run(get_conn())
         retrieved_block_2 = Block.from_dict(retrieved_block_2)
 
         assert retrieved_block_1 == retrieved_block_2
 
     def test_more_votes_than_voters(self, b):
         import rethinkdb as r
-        from bigchaindb_common.exceptions import MultipleVotesError
+        from bigchaindb.common.exceptions import MultipleVotesError
+        from bigchaindb.db.utils import get_conn
 
         b.create_genesis_block()
         block_1 = dummy_block()
@@ -434,8 +443,8 @@ class TestBigchainApi(object):
         vote_1 = b.vote(block_1.id, b.get_last_voted_block().id, True)
         vote_2 = b.vote(block_1.id, b.get_last_voted_block().id, True)
         vote_2['node_pubkey'] = 'aaaaaaa'
-        r.table('votes').insert(vote_1).run(b.conn)
-        r.table('votes').insert(vote_2).run(b.conn)
+        r.table('votes').insert(vote_1).run(get_conn())
+        r.table('votes').insert(vote_2).run(get_conn())
 
         with pytest.raises(MultipleVotesError) as excinfo:
             b.block_election_status(block_1.id, block_1.voters)
@@ -444,13 +453,15 @@ class TestBigchainApi(object):
 
     def test_multiple_votes_single_node(self, b):
         import rethinkdb as r
-        from bigchaindb_common.exceptions import MultipleVotesError
+        from bigchaindb.common.exceptions import MultipleVotesError
+        from bigchaindb.db.utils import get_conn
+
         genesis = b.create_genesis_block()
         block_1 = dummy_block()
         b.write_block(block_1, durability='hard')
         # insert duplicate votes
         for i in range(2):
-            r.table('votes').insert(b.vote(block_1.id, genesis.id, True)).run(b.conn)
+            r.table('votes').insert(b.vote(block_1.id, genesis.id, True)).run(get_conn())
 
         with pytest.raises(MultipleVotesError) as excinfo:
             b.block_election_status(block_1.id, block_1.voters)
@@ -464,14 +475,16 @@ class TestBigchainApi(object):
 
     def test_improper_vote_error(selfs, b):
         import rethinkdb as r
-        from bigchaindb_common.exceptions import ImproperVoteError
+        from bigchaindb.common.exceptions import ImproperVoteError
+        from bigchaindb.db.utils import get_conn
+
         b.create_genesis_block()
         block_1 = dummy_block()
         b.write_block(block_1, durability='hard')
         vote_1 = b.vote(block_1.id, b.get_last_voted_block().id, True)
         # mangle the signature
         vote_1['signature'] = 'a' * 87
-        r.table('votes').insert(vote_1).run(b.conn)
+        r.table('votes').insert(vote_1).run(get_conn())
         with pytest.raises(ImproperVoteError) as excinfo:
             b.has_previous_vote(block_1.id, block_1.id)
         assert excinfo.value.args[0] == 'Block {block_id} already has an incorrectly signed ' \
@@ -481,6 +494,7 @@ class TestBigchainApi(object):
     def test_assign_transaction_one_node(self, b, user_vk, user_sk):
         import rethinkdb as r
         from bigchaindb.models import Transaction
+        from bigchaindb.db.utils import get_conn
 
         input_tx = b.get_owned_ids(user_vk).pop()
         input_tx = b.get_transaction(input_tx.txid)
@@ -490,7 +504,7 @@ class TestBigchainApi(object):
         b.write_transaction(tx)
 
         # retrieve the transaction
-        response = r.table('backlog').get(tx.id).run(b.conn)
+        response = r.table('backlog').get(tx.id).run(get_conn())
 
         # check if the assignee is the current node
         assert response['assignee'] == b.me
@@ -498,8 +512,9 @@ class TestBigchainApi(object):
     @pytest.mark.usefixtures('inputs')
     def test_assign_transaction_multiple_nodes(self, b, user_vk, user_sk):
         import rethinkdb as r
-        from bigchaindb_common.crypto import generate_key_pair
+        from bigchaindb.common.crypto import generate_key_pair
         from bigchaindb.models import Transaction
+        from bigchaindb.db.utils import get_conn
 
         # create 5 federation nodes
         for _ in range(5):
@@ -515,7 +530,7 @@ class TestBigchainApi(object):
             b.write_transaction(tx)
 
             # retrieve the transaction
-            response = r.table('backlog').get(tx.id).run(b.conn)
+            response = r.table('backlog').get(tx.id).run(get_conn())
 
             # check if the assignee is one of the _other_ federation nodes
             assert response['assignee'] in b.nodes_except_me
@@ -524,8 +539,8 @@ class TestBigchainApi(object):
     @pytest.mark.usefixtures('inputs')
     def test_non_create_input_not_found(self, b, user_vk):
         from cryptoconditions import Ed25519Fulfillment
-        from bigchaindb_common.exceptions import TransactionDoesNotExist
-        from bigchaindb_common.transaction import (Fulfillment, Asset,
+        from bigchaindb.common.exceptions import TransactionDoesNotExist
+        from bigchaindb.common.transaction import (Fulfillment, Asset,
                                                    TransactionLink)
         from bigchaindb.models import Transaction
         from bigchaindb import Bigchain
@@ -542,7 +557,7 @@ class TestBigchainApi(object):
 
 class TestTransactionValidation(object):
     def test_create_operation_with_inputs(self, b, user_vk, create_tx):
-        from bigchaindb_common.transaction import TransactionLink
+        from bigchaindb.common.transaction import TransactionLink
 
         # Manipulate fulfillment so that it has a `tx_input` defined even
         # though it shouldn't have one
@@ -560,8 +575,8 @@ class TestTransactionValidation(object):
         assert excinfo.value.args[0] == 'Only `CREATE` transactions can have null inputs'
 
     def test_non_create_input_not_found(self, b, user_vk, signed_transfer_tx):
-        from bigchaindb_common.exceptions import TransactionDoesNotExist
-        from bigchaindb_common.transaction import TransactionLink
+        from bigchaindb.common.exceptions import TransactionDoesNotExist
+        from bigchaindb.common.transaction import TransactionLink
 
         signed_transfer_tx.fulfillments[0].tx_input = TransactionLink('c', 0)
         with pytest.raises(TransactionDoesNotExist):
@@ -569,8 +584,8 @@ class TestTransactionValidation(object):
 
     @pytest.mark.usefixtures('inputs')
     def test_non_create_valid_input_wrong_owner(self, b, user_vk):
-        from bigchaindb_common.crypto import generate_key_pair
-        from bigchaindb_common.exceptions import InvalidSignature
+        from bigchaindb.common.crypto import generate_key_pair
+        from bigchaindb.common.exceptions import InvalidSignature
         from bigchaindb.models import Transaction
 
         input_tx = b.get_owned_ids(user_vk).pop()
@@ -587,7 +602,7 @@ class TestTransactionValidation(object):
     @pytest.mark.usefixtures('inputs')
     def test_non_create_double_spend(self, b, signed_create_tx,
                                      signed_transfer_tx):
-        from bigchaindb_common.exceptions import DoubleSpend
+        from bigchaindb.common.exceptions import DoubleSpend
 
         block1 = b.create_block([signed_create_tx])
         b.write_block(block1)
@@ -637,7 +652,7 @@ class TestTransactionValidation(object):
     @pytest.mark.usefixtures('inputs')
     def test_fulfillment_not_in_valid_block(self, b, user_vk, user_sk):
         from bigchaindb.models import Transaction
-        from bigchaindb_common.exceptions import FulfillmentNotInValidBlock
+        from bigchaindb.common.exceptions import FulfillmentNotInValidBlock
 
         input_tx = b.get_owned_ids(user_vk).pop()
         input_tx = b.get_transaction(input_tx.txid)
@@ -666,9 +681,9 @@ class TestBlockValidation(object):
     @pytest.mark.skipif(reason='Separated tx validation from block creation.')
     @pytest.mark.usefixtures('inputs')
     def test_invalid_transactions_in_block(self, b, user_vk):
-        from bigchaindb_common import crypto
-        from bigchaindb_common.exceptions import TransactionOwnerError
-        from bigchaindb_common.util import gen_timestamp
+        from bigchaindb.common import crypto
+        from bigchaindb.common.exceptions import TransactionOwnerError
+        from bigchaindb.common.util import gen_timestamp
 
         from bigchaindb import util
 
@@ -707,8 +722,8 @@ class TestBlockValidation(object):
         assert excinfo.value.args[0] == 'owner_before `a` does not own the input `{}`'.format(valid_input)
 
     def test_invalid_signature(self, b):
-        from bigchaindb_common.exceptions import InvalidSignature
-        from bigchaindb_common import crypto
+        from bigchaindb.common.exceptions import InvalidSignature
+        from bigchaindb.common import crypto
 
         # create a valid block
         block = dummy_block()
@@ -721,8 +736,8 @@ class TestBlockValidation(object):
             b.validate_block(block)
 
     def test_invalid_node_pubkey(self, b):
-        from bigchaindb_common.exceptions import OperationError
-        from bigchaindb_common import crypto
+        from bigchaindb.common.exceptions import OperationError
+        from bigchaindb.common import crypto
 
         # blocks can only be created by a federation node
         # create a valid block
@@ -746,7 +761,7 @@ class TestBlockValidation(object):
 class TestMultipleInputs(object):
     def test_transfer_single_owner_single_input(self, b, inputs, user_vk,
                                                 user_sk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
         user2_sk, user2_vk = crypto.generate_key_pair()
 
@@ -766,7 +781,7 @@ class TestMultipleInputs(object):
                                 'multiple assets'))
     @pytest.mark.usefixtures('inputs')
     def test_transfer_single_owners_multiple_inputs(self, b, user_sk, user_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -789,7 +804,7 @@ class TestMultipleInputs(object):
     def test_transfer_single_owners_single_input_from_multiple_outputs(self, b,
                                                                        user_sk,
                                                                        user_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -828,7 +843,7 @@ class TestMultipleInputs(object):
                                                                     user_sk,
                                                                     user_vk,
                                                                     inputs):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -851,7 +866,7 @@ class TestMultipleInputs(object):
     def test_single_owner_before_multiple_owners_after_multiple_inputs(self, b,
                                                                        user_sk,
                                                                        user_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -882,7 +897,7 @@ class TestMultipleInputs(object):
     def test_multiple_owners_before_single_owner_after_single_input(self, b,
                                                                     user_sk,
                                                                     user_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -915,7 +930,7 @@ class TestMultipleInputs(object):
     @pytest.mark.usefixtures('inputs_shared')
     def test_multiple_owners_before_single_owner_after_multiple_inputs(self, b,
                                           user_sk, user_vk, user2_vk, user2_sk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         # create a new users
@@ -936,7 +951,7 @@ class TestMultipleInputs(object):
     def test_multiple_owners_before_multiple_owners_after_single_input(self, b,
                                                                        user_sk,
                                                                        user_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -970,7 +985,7 @@ class TestMultipleInputs(object):
     def test_multiple_owners_before_multiple_owners_after_multiple_inputs(self, b,
                                                                 user_sk, user_vk,
                                                                 user2_sk, user2_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         # create a new users
@@ -989,8 +1004,8 @@ class TestMultipleInputs(object):
         assert len(tx.conditions) == len(inputs)
 
     def test_get_owned_ids_single_tx_single_output(self, b, user_sk, user_vk):
-        from bigchaindb_common import crypto
-        from bigchaindb_common.transaction import TransactionLink
+        from bigchaindb.common import crypto
+        from bigchaindb.common.transaction import TransactionLink
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -1018,8 +1033,8 @@ class TestMultipleInputs(object):
     def test_get_owned_ids_single_tx_single_output_invalid_block(self, b,
                                                                  user_sk,
                                                                  user_vk):
-        from bigchaindb_common import crypto
-        from bigchaindb_common.transaction import TransactionLink
+        from bigchaindb.common import crypto
+        from bigchaindb.common.transaction import TransactionLink
         from bigchaindb.models import Transaction
 
         genesis = b.create_genesis_block()
@@ -1063,8 +1078,8 @@ class TestMultipleInputs(object):
     def test_get_owned_ids_single_tx_multiple_outputs(self, b, user_sk,
                                                       user_vk):
         import random
-        from bigchaindb_common import crypto
-        from bigchaindb_common.transaction import TransactionLink
+        from bigchaindb.common import crypto
+        from bigchaindb.common.transaction import TransactionLink
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -1100,8 +1115,8 @@ class TestMultipleInputs(object):
                                       TransactionLink(tx.id, 1)]
 
     def test_get_owned_ids_multiple_owners(self, b, user_sk, user_vk):
-        from bigchaindb_common import crypto
-        from bigchaindb_common.transaction import TransactionLink
+        from bigchaindb.common import crypto
+        from bigchaindb.common.transaction import TransactionLink
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -1130,7 +1145,7 @@ class TestMultipleInputs(object):
         assert owned_inputs_user1 == []
 
     def test_get_spent_single_tx_single_output(self, b, user_sk, user_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()
@@ -1158,7 +1173,7 @@ class TestMultipleInputs(object):
         assert spent_inputs_user1 == tx
 
     def test_get_spent_single_tx_single_output_invalid_block(self, b, user_sk, user_vk):
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         genesis = b.create_genesis_block()
@@ -1204,7 +1219,7 @@ class TestMultipleInputs(object):
                                 'multiple assets'))
     def test_get_spent_single_tx_multiple_outputs(self, b, user_sk, user_vk):
         import random
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         # create a new users
@@ -1244,7 +1259,7 @@ class TestMultipleInputs(object):
 
     def test_get_spent_multiple_owners(self, b, user_sk, user_vk):
         import random
-        from bigchaindb_common import crypto
+        from bigchaindb.common import crypto
         from bigchaindb.models import Transaction
 
         user2_sk, user2_vk = crypto.generate_key_pair()

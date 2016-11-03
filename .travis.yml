@@ -1,5 +1,6 @@
 sudo: required
 language: python
+cache: pip
 python:
   - 3.4
   - 3.5
@@ -15,7 +16,9 @@ install:
   - pip install -e .[test]
   - pip install codecov
 
-before_script: rethinkdb --daemon
+before_script:
+  - flake8 --max-line-length 119 bigchaindb/
+  - rethinkdb --daemon
 
 script: py.test -n auto -s -v --cov=bigchaindb
 

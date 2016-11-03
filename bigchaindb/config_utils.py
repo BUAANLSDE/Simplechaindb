@@ -6,7 +6,7 @@ determined according to the following rules:
 * If it's set by an environment variable, then use that value
 * Otherwise, if it's set in a local config file, then use that
   value
-* Otherwise, use the default value (contained in 
+* Otherwise, use the default value (contained in
   ``bigchaindb.__init__``)
 """
 
@@ -17,7 +17,7 @@ import json
 import logging
 import collections
 
-from bigchaindb_common import exceptions
+from bigchaindb.common import exceptions
 
 import bigchaindb
 

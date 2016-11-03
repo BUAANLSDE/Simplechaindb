@@ -1,11 +1,11 @@
-from bigchaindb_common.crypto import hash_data, VerifyingKey, SigningKey
-from bigchaindb_common.exceptions import (InvalidHash, InvalidSignature,
+from bigchaindb.common.crypto import hash_data, VerifyingKey, SigningKey
+from bigchaindb.common.exceptions import (InvalidHash, InvalidSignature,
                                           OperationError, DoubleSpend,
                                           TransactionDoesNotExist,
                                           FulfillmentNotInValidBlock,
                                           AssetIdMismatch)
-from bigchaindb_common.transaction import Transaction, Asset
-from bigchaindb_common.util import gen_timestamp, serialize
+from bigchaindb.common.transaction import Transaction, Asset
+from bigchaindb.common.util import gen_timestamp, serialize
 
 
 class Asset(Asset):
@@ -190,7 +190,7 @@ class Block(object):
 
     def is_signature_valid(self):
         block = self.to_dict()['block']
-        # cc only accepts bytesting messages 
+        # cc only accepts bytesting messages
         block_serialized = serialize(block).encode()
         verifying_key = VerifyingKey(block['node_pubkey'])
         try:

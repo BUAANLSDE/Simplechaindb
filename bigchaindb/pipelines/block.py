@@ -69,9 +69,7 @@ class BlockPipeline:
                 # if the tx is already in a valid or undecided block,
                 # then it no longer should be in the backlog, or added
                 # to a new block. We can delete and drop it.
-                r.table('backlog').get(tx.id) \
-                        .delete(durability='hard') \
-                        .run(self.bigchain.conn)
+                self.bigchain.delete_transaction(tx.id)
                 return None
 
         tx_validated = self.bigchain.is_valid_transaction(tx)
@@ -80,9 +78,7 @@ class BlockPipeline:
         else:
             # if the transaction is not valid, remove it from the
             # backlog
-            r.table('backlog').get(tx.id) \
-                    .delete(durability='hard') \
-                    .run(self.bigchain.conn)
+            self.bigchain.delete_transaction(tx.id)
             return None
 
     def create(self, tx, timeout=False):
@@ -120,8 +116,7 @@ class BlockPipeline:
         Returns:
             :class:`~bigchaindb.models.Block`: The Block.
         """
-        logger.info('Write new block {} with {} transactions'.format(block.id,
-                    len(block.transactions)))
+        logger.info('Write new block %s with %s transactions', block.id, block.transactions)
         self.bigchain.write_block(block)
         return block
 
@@ -135,28 +130,21 @@ class BlockPipeline:
         Returns:
             :class:`~bigchaindb.models.Block`: The block.
         """
-        r.table('backlog')\
-         .get_all(*[tx.id for tx in block.transactions])\
-         .delete(durability='hard')\
-         .run(self.bigchain.conn)
-
+        self.bigchain.delete_transaction(*[tx.id for tx in block.transactions])
         return block
 
 
 def initial():
     """Return old transactions from the backlog."""
 
-    b = Bigchain()
+    bigchain = Bigchain()
 
-    rs = b.connection.run(
-            r.table('backlog')
-            .between(
-                [b.me, r.minval],
-                [b.me, r.maxval],
-                index='assignee__transaction_timestamp')
-            .order_by(index=r.asc('assignee__transaction_timestamp')))
-
-    return rs
+    return bigchain.connection.run(
+        r.table('backlog')
+        .between([bigchain.me, r.minval],
+                 [bigchain.me, r.maxval],
+                 index='assignee__transaction_timestamp')
+        .order_by(index=r.asc('assignee__transaction_timestamp')))
 
 
 def get_changefeed():

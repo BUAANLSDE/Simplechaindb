@@ -26,8 +26,8 @@ class StaleTransactionMonitor:
         Args:
             timeout: how often to check for stale tx (in sec)
             backlog_reassign_delay: How stale a transaction should
-            be before reassignment (in sec). If supplied, overrides the
-            Bigchain default value.
+                be before reassignment (in sec). If supplied, overrides
+                the Bigchain default value.
         """
         self.bigchain = Bigchain(backlog_reassign_delay=backlog_reassign_delay)
         self.timeout = timeout
@@ -71,6 +71,5 @@ def start(timeout=5, backlog_reassign_delay=5):
     """Create, start, and return the block pipeline."""
     pipeline = create_pipeline(timeout=timeout,
                                backlog_reassign_delay=backlog_reassign_delay)
-    pipeline.setup()
     pipeline.start()
     return pipeline
