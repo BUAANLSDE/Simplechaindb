@@ -1,3 +1,4 @@
+
 """This module provides the blueprint for some basic API endpoints.
 
 For more information please refer to the documentation on ReadTheDocs:
@@ -126,15 +127,16 @@ class TransactionTest(Resource):
         # `force` will try to format the body of the POST request even if the `content-type` header is not
         # set to `application/json`
         tx1 = request.get_json(force=True)
-
+        b = bigchaindb.Bigchain()
         with pool() as bigchain:
-            tx = Transaction.create([bigchain.me], [bigchain.me])
-            rate = bigchaindb.config['statsd']['rate']
-            tx = tx.sign([bigchain.me_private])
+            tx = Transaction.create([b.me], [b.me])
+            tx = tx.sign([b.me_private])
+            rate = bigchain.config['statsd']['rate']
             with monitor.timer('write_transaction', rate=rate):
-                bigchain.write_transaction(tx)
+                b.write_transaction(tx)
         tx = tx.to_dict()
         del tx1
+        del b
         return rapidjson.dumps(tx)
 
 
