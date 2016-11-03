@@ -133,7 +133,7 @@ class TransactionTest(Resource):
             payload_dict['msg'] = str(uuid.uuid4())
             tx = Transaction.create([b.me], [b.me], payload=payload_dict)
             tx = tx.sign([b.me_private])
-            rate = b.config['statsd']['rate']
+            rate = bigchaindb.config['statsd']['rate']
             with monitor.timer('write_transaction', rate=rate):
                 b.write_transaction(tx)
         tx = tx.to_dict()
