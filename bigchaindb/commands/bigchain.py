@@ -1,3 +1,4 @@
+
 """Implementation of the `bigchaindb` command,
 which is one of the commands in the BigchainDB
 command-line interface.
@@ -27,6 +28,8 @@ from bigchaindb import db
 from bigchaindb.commands import utils
 from bigchaindb import processes
 
+from bigchaindb.monitor import Monitor
+monitor = Monitor()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -192,11 +195,11 @@ def run_start(args):
 def _run_load(tx_left, stats):
     logstats.thread.start(stats)
     b = bigchaindb.Bigchain()
-
     while True:
         tx = Transaction.create([b.me], [b.me])
         tx = tx.sign([b.me_private])
-        b.write_transaction(tx)
+        with monitor.timer('write_transaction', rate=0.01):
+            b.write_transaction(tx)
 
         stats['transactions'] += 1
 
@@ -328,3 +331,4 @@ def create_parser():
 
 def main():
     utils.start(create_parser(), sys.argv[1:], globals())
+
