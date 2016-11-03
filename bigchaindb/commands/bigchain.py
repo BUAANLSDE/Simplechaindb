@@ -28,6 +28,7 @@ from bigchaindb import db
 from bigchaindb.commands import utils
 from bigchaindb import processes
 
+import time
 import random
 from bigchaindb.monitor import Monitor
 monitor = Monitor()
