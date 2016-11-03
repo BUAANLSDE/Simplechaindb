@@ -187,8 +187,15 @@ def init_bigchaindb():
         run('simplechaindb -y drop',pty=False)
         run('simplechaindb init', pty=False)
         #must set_shards
-        # num_shards = len(public_hosts)
-        # run('simplechaindb set-shards {}'.format(num_shards))
+        num_shards = len(public_hosts)
+        run('simplechaindb set-shards {}'.format(num_shards))
+
+@task
+@hosts(public_hosts[0])
+
+def drop_bigchaindb():
+    with settings(warn_only=True):
+        run('simplechaindb -y drop',pty=False)
 
 
 # Set the number of shards (tables[bigchain,votes,backlog])
