@@ -131,7 +131,7 @@ class TransactionTest(Resource):
         payload_dict = {}
         with pool() as b:
             payload_dict['msg'] = str(uuid.uuid4())
-            tx = Transaction.create([b.me], [b.me], payload=payload_dict)
+            tx = Transaction.create([b.me], [b.me], metadata=payload_dict)
             tx = tx.sign([b.me_private])
             rate = bigchaindb.config['statsd']['rate']
             with monitor.timer('write_transaction', rate=rate):
