@@ -417,3 +417,21 @@ def uninstall_bigchaindb():
     with settings(warn_only=True):
          sudo('pip3 uninstall bigchaindb')
          sudo('pip3 uninstall simplechaindb')
+
+@task
+@parallel
+def uninstall_bigchaindb():
+    with settings(warn_only=True):
+         # sudo(" echo 'uninstall latest bigchiandb' ")
+         # sudo('pip3 uninstall bigchaindb')
+         sudo(" echo 'uninstall bigchiandb app in usr/local/bin' ")
+         sudo('rm /usr/local/bin/bigchaindb')
+
+
+@task
+@parallel
+def kill_port(port):
+    with settings(warn_only=True):
+        # if port is not None and isinstance(port,int):
+        sudo(" echo kill process use the port %s" %(port))
+        sudo(" kill `netstat -nlp | grep :"+port+" | awk '{print $7}' | awk -F'/' '{ print $1 }'` ")
