@@ -28,4 +28,6 @@ fi
 #./install_localdb.sh
 ./install_bigchaindb_from_git_archive.sh
 ./configure_bigchaindb.sh $1
+fab init_bigchaindb
+fab set_shards:$1
 ./clustercontrol.sh start

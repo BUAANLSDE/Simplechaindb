@@ -21,7 +21,8 @@ fi
 
 ./install_bigchaindb_from_git_archive.sh
 ./configure_bigchaindb.sh $1
-
+#Todo 增加节点的话分片修改?
+fab set_shards:$1
 ./clustercontrol.sh stop
 ./clustercontrol.sh start
 

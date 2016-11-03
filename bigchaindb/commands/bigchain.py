@@ -122,7 +122,7 @@ def run_configure(args, skip_if_exists=False):
 def run_export_my_pubkey(args):
     """Export this node's public key to standard output
     """
-    logger.debug('bigchaindb args = {}'.format(args))
+    logger.debug('simplechaindb args = {}'.format(args))
     bigchaindb.config_utils.autoconfigure(filename=args.config, force=True)
     pubkey = bigchaindb.config['keypair']['public']
     if pubkey is not None:
@@ -184,7 +184,7 @@ def run_start(args):
         pass
     except KeypairNotFoundException:
         sys.exit("Can't start BigchainDB, no keypair found. "
-                 'Did you run `bigchaindb configure`?')
+                 'Did you run `simplechaindb configure`?')
 
     logger.info('Starting BigchainDB main process with public key %s',
                 bigchaindb.config['keypair']['public'])

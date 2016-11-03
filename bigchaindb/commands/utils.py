@@ -101,7 +101,7 @@ def start(parser, argv, scope):
     return func(args)
 
 
-base_parser = argparse.ArgumentParser(add_help=False, prog='bigchaindb')
+base_parser = argparse.ArgumentParser(add_help=False, prog='simplechaindb')
 
 base_parser.add_argument('-c', '--config',
                          help='Specify the location of the configuration file '

@@ -187,17 +187,25 @@ def init_bigchaindb():
         run('simplechaindb -y drop',pty=False)
         run('simplechaindb init', pty=False)
         #must set_shards
-        num_shards = len(public_hosts)
-        run('simplechaindb set-shards {}'.format(num_shards))
+        # num_shards = len(public_hosts)
+        # run('simplechaindb set-shards {}'.format(num_shards))
 
 
-
-# Set the number of shards (in the backlog and bigchain tables)
+# Set the number of shards (tables[bigchain,votes,backlog])
 @task
 @hosts(public_hosts[0])
 
 def set_shards(num_shards):
     run('simplechaindb set-shards {}'.format(num_shards))
+
+
+# Set the number of replicas (tables[bigchain,votes,backlog])
+@task
+@hosts(public_hosts[0])
+
+def set_replicas(num_replicas):
+    run('simplechaindb set-replicas {}'.format(num_replicas))
+
 
 # Start BigchainDB using screen
 @task
@@ -216,6 +224,26 @@ def stop_bigchaindb():
 @parallel
 def start_bigchaindb_load():
     sudo('screen -d -m simplechaindb load &', pty=False)
+
+@task
+@parallel
+def start_bigchaindb_load_processes_counts(m=None,c=None):
+    if m is None and c is None:
+        sudo('screen -d -m simplechaindb load &', pty=False)
+    flag = None
+    v = None
+    if m and isinstance(m,int):
+        flag=flag+'m'
+        v = m
+    if c and isinstance(c,int):
+        flag=flag+'c'
+        v = c
+    if len(flag) == 1:
+        sudo('screen -d -m simplechaindb load -' + flag + ' ' + v + ' &', pty=False)
+        
+    if len(flag) == 2:
+        sudo('screen -d -m simplechaindb load -m ' + m + ' -c ' + c + ' &', pty=False)
+
 
 # rethinkdb
 @task
@@ -381,4 +409,11 @@ def init_all_nodes():
 def kill_all():
     with settings(warn_only=True):
          sudo('killall -9 rethinkdb')
-         sudo('killall -9 bigchaindb')
+         sudo('killall -9 simplechaindb')
+
+@task
+@parallel
+def uninstall_bigchaindb():
+    with settings(warn_only=True):
+         sudo('pip3 uninstall bigchaindb')
+         sudo('pip3 uninstall simplechaindb')

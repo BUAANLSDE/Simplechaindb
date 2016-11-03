@@ -46,5 +46,3 @@ for (( HOST=0 ; HOST<$NUM_NODES ; HOST++ )); do
     echo "Sending "$CONFILE
     fab set_host:$HOST send_confile:$CONFILE
 done
-fab init_bigchaindb
-fab set_shards:$NUM_NODES
