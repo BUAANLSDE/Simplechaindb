@@ -127,10 +127,12 @@ class TransactionTest(Resource):
         # set to `application/json`
         tx1 = request.get_json(force=True)
 
-        with pool() as b:
-            tx = Transaction.create([b.me], [b.me])
-            tx = tx.sign([b.me_private])
-            b.write_transaction(tx)
+        with pool() as bigchain:
+            tx = Transaction.create([bigchain.me], [bigchain.me])
+            rate = bigchaindb.config['statsd']['rate']
+            tx = tx.sign([bigchain.me_private])
+            with monitor.timer('write_transaction', rate=rate):
+                bigchain.write_transaction(tx)
         tx = tx.to_dict()
         del tx1
         return rapidjson.dumps(tx)
