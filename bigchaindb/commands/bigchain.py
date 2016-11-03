@@ -28,6 +28,7 @@ from bigchaindb import db
 from bigchaindb.commands import utils
 from bigchaindb import processes
 
+import random
 from bigchaindb.monitor import Monitor
 monitor = Monitor()
 
@@ -191,7 +192,29 @@ def run_start(args):
                 bigchaindb.config['keypair']['public'])
     processes.start()
 
+def _run_load(tx_left, stats):
+    logstats.thread.start(stats)
+    b = bigchaindb.Bigchain()
 
+    while True:
+        # 此次执行创建多少交易
+        random_transactions = random.Random().randint(500, 999)
+        # 创建交易后休息多少秒
+        sleep_random = random.Random().randint(2, 4)
+
+        for i in range(random_transactions):
+            tx = Transaction.create([b.me], [b.me])
+            tx = tx.sign([b.me_private])
+            with monitor.timer('write_transaction', rate=0.01):
+                b.write_transaction(tx)
+            
+            stats['transactions'] += 1
+            if tx_left is not None:
+                tx_left -= 1
+                if tx_left == 0:
+                    break
+        time.sleep(sleep_random)
+"""
 def _run_load(tx_left, stats):
     logstats.thread.start(stats)
     b = bigchaindb.Bigchain()
@@ -207,7 +230,7 @@ def _run_load(tx_left, stats):
             tx_left -= 1
             if tx_left == 0:
                 break
-
+"""
 
 def run_load(args):
     bigchaindb.config_utils.autoconfigure(filename=args.config, force=True)
