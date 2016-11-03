@@ -14,6 +14,7 @@ from bigchaindb.models import Transaction
 from bigchaindb.web.views.base import make_error
 
 import rapidjson
+import uuid
 
 transaction_views = Blueprint('transaction_views', __name__)
 transaction_api = Api(transaction_views)
@@ -127,14 +128,17 @@ class TransactionTest(Resource):
         # `force` will try to format the body of the POST request even if the `content-type` header is not
         # set to `application/json`
         tx1 = request.get_json(force=True)
-        with pool() as bigchain:
-            tx = Transaction.create([bigchain.me], [bigchain.me])
-            tx = tx.sign([bigchain.me_private])
-            rate = bigchain.config['statsd']['rate']
+        payload_dict = {}
+        with pool() as b:
+            payload_dict['msg'] = str(uuid.uuid4())
+            tx = Transaction.create([b.me], [b.me], payload=payload_dict)
+            tx = tx.sign([b.me_private])
+            rate = b.config['statsd']['rate']
             with monitor.timer('write_transaction', rate=rate):
-                bigchain.write_transaction(tx)
+                b.write_transaction(tx)
         tx = tx.to_dict()
         del tx1
+        del payload_dict
         return rapidjson.dumps(tx)
 
 
