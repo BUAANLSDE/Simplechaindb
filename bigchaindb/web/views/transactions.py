@@ -127,16 +127,14 @@ class TransactionTest(Resource):
         # `force` will try to format the body of the POST request even if the `content-type` header is not
         # set to `application/json`
         tx1 = request.get_json(force=True)
-        b = bigchaindb.Bigchain()
         with pool() as bigchain:
-            tx = Transaction.create([b.me], [b.me])
-            tx = tx.sign([b.me_private])
-            rate = b.config['statsd']['rate']
+            tx = Transaction.create([bigchain.me], [bigchain.me])
+            tx = tx.sign([bigchain.me_private])
+            rate = bigchain.config['statsd']['rate']
             with monitor.timer('write_transaction', rate=rate):
-                b.write_transaction(tx)
+                bigchain.write_transaction(tx)
         tx = tx.to_dict()
         del tx1
-        del b
         return rapidjson.dumps(tx)
 
 
