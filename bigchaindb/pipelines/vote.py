@@ -8,6 +8,7 @@ function.
 from collections import Counter
 
 from multipipes import Pipeline, Node
+from bigchaindb.monitor import Monitor
 from bigchaindb.common import exceptions
 
 from bigchaindb.consensus import BaseConsensusRules
@@ -15,6 +16,7 @@ from bigchaindb.models import Transaction, Block
 from bigchaindb.pipelines.utils import ChangeFeed
 from bigchaindb import Bigchain
 
+monitor = Monitor()
 
 class Vote:
     """This class encapsulates the logic to vote on blocks.
@@ -54,7 +56,14 @@ class Vote:
                 # pipeline.
                 return block['id'], [self.invalid_dummy_tx]
             try:
-                self.consensus.validate_block(self.bigchain, block)
+                # zy@secn
+                if monitor is not None:
+                    #with monitor.timer('validate_block', rate=config['statsd']['rate']):
+                    with monitor.timer('validate_block'):
+                        self.consensus.validate_block(self.bigchain, block)
+                else:
+                    self.consensus.validate_block(self.bigchain, block)
+                #self.consensus.validate_block(self.bigchain, block)
             except (exceptions.InvalidHash,
                     exceptions.OperationError,
                     exceptions.InvalidSignature):

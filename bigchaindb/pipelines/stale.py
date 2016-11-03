@@ -5,12 +5,14 @@ remain in the backlog past a certain amount of time.
 """
 
 import logging
+from bigchaindb.monitor import Monitor
 from multipipes import Pipeline, Node
 from bigchaindb import Bigchain
 from time import sleep
 
 
 logger = logging.getLogger(__name__)
+monitor = Monitor()
 
 
 class StaleTransactionMonitor:
@@ -39,6 +41,8 @@ class StaleTransactionMonitor:
             txs (list): txs to be re assigned
         """
         sleep(self.timeout)
+        # zy@secn
+        monitor.gauge('tx_queue_gauge', value=self.bigchain.get_backlog_tx_number())
         for tx in self.bigchain.get_stale_transactions():
             yield tx
 

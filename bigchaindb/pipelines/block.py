@@ -10,12 +10,14 @@ import logging
 import rethinkdb as r
 from multipipes import Pipeline, Node
 
+from bigchaindb.monitor import Monitor
 from bigchaindb.models import Transaction
 from bigchaindb.pipelines.utils import ChangeFeed
-from bigchaindb import Bigchain
+from bigchaindb import Bigchain, config
 
 
 logger = logging.getLogger(__name__)
+monitor = Monitor()
 
 
 class BlockPipeline:
@@ -72,7 +74,12 @@ class BlockPipeline:
                 self.bigchain.delete_transaction(tx.id)
                 return None
 
-        tx_validated = self.bigchain.is_valid_transaction(tx)
+        if monitor is not None:
+            with monitor.timer('validate_transaction', rate=config['statsd']['rate']):
+                tx_validated = self.bigchain.is_valid_transaction(tx)
+        else:
+            tx_validated = self.bigchain.is_valid_transaction(tx)
+        #tx_validated = self.bigchain.is_valid_transaction(tx)
         if tx_validated:
             return tx
         else:
@@ -117,7 +124,14 @@ class BlockPipeline:
             :class:`~bigchaindb.models.Block`: The Block.
         """
         logger.info('Write new block %s with %s transactions', block.id, block.transactions)
-        self.bigchain.write_block(block)
+        # zy@secn
+        if monitor is not None:
+            #with monitor.timer('write_block', rate=config['statsd']['rate']):
+            with monitor.timer('write_block'):
+                self.bigchain.write_block(block)
+        else:
+            self.bigchain.write_block(block)
+        #self.bigchain.write_block(block)
         return block
 
     def delete_tx(self, block):

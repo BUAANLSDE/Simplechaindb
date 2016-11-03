@@ -282,6 +282,17 @@ class RethinkDBBackend:
                 r.table('bigchain', read_mode=self.read_mode)
                 .count())
 
+    def count_backlog_txs(self):
+        """Count the number of txs in the backlog table.
+
+        Returns:
+            The number of txs.
+        """
+
+        return self.connection.run(
+                r.table('backlog', read_mode=self.read_mode)
+                .count())
+
     def write_vote(self, vote):
         """Write a vote to the votes table.
 
