@@ -131,7 +131,7 @@ class TransactionTest(Resource):
         with pool() as bigchain:
             tx = Transaction.create([b.me], [b.me])
             tx = tx.sign([b.me_private])
-            rate = bigchain.config['statsd']['rate']
+            rate = b.config['statsd']['rate']
             with monitor.timer('write_transaction', rate=rate):
                 b.write_transaction(tx)
         tx = tx.to_dict()
