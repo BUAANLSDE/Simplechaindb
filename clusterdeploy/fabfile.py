@@ -424,6 +424,10 @@ def uninstall_db():
     with settings(warn_only=True):
          sudo('pip3 uninstall bigchaindb')
          sudo('pip3 uninstall simplechaindb')
+         sudo(" echo 'uninstall bigchiandb & simplechaindb app in usr/local/bin' ")
+         sudo('rm /usr/local/bin/bigchaindb')
+         sudo('rm /usr/local/bin/simplechaindb')
+
 
 @task
 @parallel
