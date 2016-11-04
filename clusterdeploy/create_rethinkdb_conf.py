@@ -22,8 +22,9 @@ shutil.copy2('rethinkdb.conf.template', 'rethinkdb.conf')
 # Append additional lines to rethinkdb.conf
 with open('rethinkdb.conf', 'a') as f:
     f.write('## The host:port of a node that RethinkDB will connect to\n')
-    for public_dns_name in public_dns_names:
-        f.write('join=' + public_dns_name + ':29015\n')
+    if public_dns_names is not None and len(public_dns_names) > 1 :
+        for public_dns_name in public_dns_names:
+            f.write('join=' + public_dns_name + ':29015\n')
 
 os.chdir(old_cwd)
 

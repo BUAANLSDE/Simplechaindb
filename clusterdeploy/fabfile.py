@@ -236,8 +236,8 @@ def start_bigchaindb_load():
 @parallel
 def start_bigchaindb_load_processes_counts(m=None,c=None):
     if m is None and c is None:
-        sudo('screen -d -m simplechaindb load &', pty=False)
-    flag = None
+        sudo('screen -d -m simplechaindb load &', pty=False,user=env.user)
+    flag = ''
     v = None
     if m and isinstance(m,int):
         flag=flag+'m'
@@ -245,12 +245,15 @@ def start_bigchaindb_load_processes_counts(m=None,c=None):
     if c and isinstance(c,int):
         flag=flag+'c'
         v = c
+    sudo("echo " + flag)
+
     if len(flag) == 1:
-        sudo('screen -d -m simplechaindb load -' + flag + ' ' + v + ' &', pty=False)
+        sudo('screen -d -m simplechaindb load -{} {} &'.format(flag, v), pty=False,user=env.user)
+        sudo("echo " + 'screen -d -m simplechaindb load -{} {} &'.format(flag, v))
 
     if len(flag) == 2:
-        sudo('screen -d -m simplechaindb load -m ' + m + ' -c ' + c + ' &', pty=False)
-
+        sudo('screen -d -m simplechaindb load -m {} -c {} &'.format(m, c), pty=False,user=env.user)
+        sudo("echo " + 'screen -d -m simplechaindb load -m {} -c {} &'.format(m, c) )
 
 # rethinkdb
 @task
@@ -451,3 +454,10 @@ def kill_port(port):
         # if port is not None and isinstance(port,int):
         sudo(" echo kill process use the port %s" %(port))
         sudo(" kill `netstat -nlp | grep :"+port+" | awk '{print $7}' | awk -F'/' '{ print $1 }'` ")
+
+@task
+@parallel
+def clear_rethinkdb_data():
+    with settings(warn_only=True):
+        sudo(" echo clean rethinkdb datas")
+        sudo('rm -rf /data/*')
