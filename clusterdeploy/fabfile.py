@@ -404,6 +404,14 @@ def configure_collectd():
 
 @task
 @parallel
+def start_collectd():
+    """Installation of Collectd"""
+    with settings(warn_only=True):
+        sudo("echo 'collectd restart' ")
+        sudo('service collectd restart', pty=False)
+
+@task
+@parallel
 def init_all_nodes():
     with settings(warn_only=True):
          sudo('killall -9 rethinkdb')
