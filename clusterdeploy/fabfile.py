@@ -420,7 +420,7 @@ def kill_all():
 
 @task
 @parallel
-def uninstall_bigchaindb():
+def uninstall_db():
     with settings(warn_only=True):
          sudo('pip3 uninstall bigchaindb')
          sudo('pip3 uninstall simplechaindb')
