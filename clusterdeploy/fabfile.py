@@ -234,19 +234,18 @@ def start_bigchaindb_load():
 
 @task
 @parallel
-def start_bigchaindb_load_processes_counts(m=None,c=None):
+def start_bigchaindb_load_processes_counts(m=1,c=None):
+    sudo("echo " + 'm={} c={} &'.format(m, c))
     if m is None and c is None:
         sudo('screen -d -m simplechaindb load &', pty=False,user=env.user)
     flag = ''
     v = None
-    if m and isinstance(m,int):
+    if m :
         flag=flag+'m'
         v = m
-    if c and isinstance(c,int):
+    if c :
         flag=flag+'c'
         v = c
-    sudo("echo " + flag)
-
     if len(flag) == 1:
         sudo('screen -d -m simplechaindb load -{} {} &'.format(flag, v), pty=False,user=env.user)
         sudo("echo " + 'screen -d -m simplechaindb load -{} {} &'.format(flag, v))
