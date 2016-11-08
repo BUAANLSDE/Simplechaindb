@@ -51,30 +51,23 @@ headers = {'content-type': 'application/json'}
 # time.sleep(sleep_random)
 
 def startRun():
-    random_transactions = random.Random().randint(500, 999)
-    sleep_random = random.Random().randint(1, 4)
+    while True:
+        random_transactions = random.Random().randint(500, 999)
+        sleep_random = random.Random().randint(1, 4)
+        print('will create %d transactions and then sleep %ds' % (random_transactions, sleep_random))
+        for i in range(random_transactions):
+            payload = {
+                "private_key": "7JVZtx9tCQD12HXG2J1QntrhcntNu7Sp3BCPF3H7fUhY"
 
-    # print("start Run...............")
-    print('will create %d transactions and then sleep %ds' % (random_transactions, sleep_random))
-    for i in range(random_transactions):
-        # print("run1")
-        payload = {
-            "private_key": "7JVZtx9tCQD12HXG2J1QntrhcntNu7Sp3BCPF3H7fUhY"
-
-        }
-        # print("run2")
-        data = json.dumps(payload)
-        # print("run3")
-        ret = requests.post(url, data=data, headers=headers)
-        # print("run4")
-        print(ret)
-    time.sleep(sleep_random)
+            }
+            data = json.dumps(payload)
+            ret = requests.post(url, data=data, headers=headers)
+            print(ret)
+        time.sleep(sleep_random)
 
 if __name__ == "__main__":
     pool = mp.Pool(processes=int(processCount))
-    while True:
-    # for i in range(3):
-        time.sleep(random.Random().randint(1, 4))
+    for i in range(int(processCount)):
         result = pool.apply_async(startRun)
     pool.close()
     pool.join()
