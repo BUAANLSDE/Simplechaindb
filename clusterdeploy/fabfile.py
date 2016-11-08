@@ -468,3 +468,25 @@ def clear_rethinkdb_data():
     with settings(warn_only=True):
         sudo(" echo clean rethinkdb datas")
         sudo('rm -rf /data/*')
+
+@task
+@parallel
+def reboot_all():
+    with settings(warn_only=True):
+        sudo(" reboot")
+
+@task
+@parallel
+def init_all_rethinkdb_single():
+    with settings(warn_only=True):
+        run('simplechaindb -y drop',pty=False)
+        run('simplechaindb init', pty=False)
+        #must set_shards
+        #num_shards = len(public_hosts)
+        #run('simplechaindb set-shards {}'.format(num_shards))
+
+@task
+@parallel
+def drop_all_rethinkdb_single():
+    with settings(warn_only=True):
+        run('simplechaindb -y drop',pty=False)
